@@ -7,9 +7,12 @@ import '@fontsource/cormorant-garamond/600.css';
 import './index.css';
 import { App } from './App';
 import { store } from './store';
+import { registerServiceWorker } from './registerSW';
 
 createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <Provider store={store}><BrowserRouter><App /></BrowserRouter></Provider>
   </React.StrictMode>,
 );
+
+registerServiceWorker();
