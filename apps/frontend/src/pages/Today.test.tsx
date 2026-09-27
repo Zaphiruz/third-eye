@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { screen } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { FortuneDto } from '@third-eye/shared';
 import { installMockApi, ok } from '../test/mockApi';
@@ -54,5 +54,37 @@ describe('Today', () => {
     renderApp();
     await userEvent.click(await screen.findByRole('button', { name: 'Try again' }));
     expect(calls.filter((c) => c.method === 'POST' && c.path === '/fortunes/today')).toHaveLength(2);
+  });
+
+  describe('recovering an orphaned PENDING reading', () => {
+    beforeEach(() => { vi.useFakeTimers({ shouldAdvanceTime: true }); });
+    afterEach(() => { vi.useRealTimers(); });
+
+    it('re-opens the fortune ~130s after a restart leaves it stuck PENDING, and stops once ready', async () => {
+      let status: 'PENDING' | 'READY' = 'PENDING';
+      const pending = fortune({ status: 'PENDING', summary: null, results: fortune().results.map((r) => ({ ...r, reading: null })) });
+      const ready = fortune({ status: 'READY' });
+      const calls = installMockApi({
+        'GET /me': ok(me()),
+        'POST /fortunes/today': () => ok({ fortune: status === 'PENDING' ? pending : ready, fresh: false }),
+        [`GET /fortunes/${pending.id}`]: () => ok(status === 'PENDING' ? pending : ready),
+      });
+      const postCount = () => calls.filter((c) => c.method === 'POST' && c.path === '/fortunes/today').length;
+
+      renderApp();
+      await act(async () => { await vi.advanceTimersByTimeAsync(0); });
+      expect(await screen.findByText('The oracle is still speaking…')).toBeInTheDocument();
+      expect(postCount()).toBe(1);
+
+      // Still PENDING after ~130s: the page should have re-opened (re-claimed) the fortune, not just polled GET.
+      await act(async () => { await vi.advanceTimersByTimeAsync(130_000); });
+      expect(postCount()).toBe(2);
+
+      // Now the reading completes; further time passing must not trigger more re-opens.
+      status = 'READY';
+      await act(async () => { await vi.advanceTimersByTimeAsync(2_000); }); // let the 2s GET poll pick up READY
+      await act(async () => { await vi.advanceTimersByTimeAsync(260_000); });
+      expect(postCount()).toBe(2);
+    });
   });
 });

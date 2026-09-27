@@ -50,7 +50,7 @@ export function ProfileForm({ initial, submitLabel, onSubmit }: {
     <form onSubmit={submit} className="grid gap-5" noValidate>
       <div>
         <label className="label" htmlFor="birthDate">Birth date</label>
-        <input id="birthDate" type="date" className="input" value={birthDate} max={new Date().toISOString().slice(0, 10)}
+        <input id="birthDate" type="date" className="input" value={birthDate} min="1900-01-01" max={new Date().toISOString().slice(0, 10)}
           onChange={(e) => setBirthDate(e.target.value)} />
         {errors.birthDate && <p className="field-error">{errors.birthDate}</p>}
       </div>

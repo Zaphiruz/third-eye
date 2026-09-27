@@ -124,6 +124,16 @@ describe('today', () => {
     expect(done.status).toBe('READY');
     expect(done.results.map((x) => x.data)).toEqual(first.fortune.results.map((x) => x.data));
   });
+
+  it('stops retrying a FAILED fortune once it has hit the attempt cap', async () => {
+    await makeUser('u1');
+    const seeded = await seedFortune(prisma, 'u1', { status: 'FAILED' });
+    await prisma.fortune.update({ where: { id: seeded.id }, data: { attempts: 8 } });
+    const r = await service().today('u1');
+    await settle();
+    expect(r.fortune.status).toBe('FAILED');
+    expect(fake.requests).toHaveLength(0);
+  });
 });
 
 describe('get and history', () => {

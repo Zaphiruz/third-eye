@@ -18,6 +18,9 @@ export interface FortuneService {
 
 const withResults = { results: true } as const;
 
+/** A FAILED fortune is re-kicked only below this many total attempts, so a persistently broken reading stops billing retries. */
+const MAX_TOTAL_ATTEMPTS = 8;
+
 export function createFortuneService(deps: FortuneServiceDeps): FortuneService {
   const { prisma } = deps;
 
@@ -31,7 +34,7 @@ export function createFortuneService(deps: FortuneServiceDeps): FortuneService {
     if (f.status === 'READY') return serializeFortune(f);
     const cutoff = new Date(deps.now().getTime() - deps.staleMs);
     const claimed = await prisma.fortune.updateMany({
-      where: { id, OR: [{ status: 'FAILED' }, { status: 'PENDING', startedAt: { lte: cutoff } }] },
+      where: { id, OR: [{ status: 'FAILED', attempts: { lt: MAX_TOTAL_ATTEMPTS } }, { status: 'PENDING', startedAt: { lte: cutoff } }] },
       data: { status: 'PENDING', startedAt: deps.now(), lastError: null },
     });
     if (claimed.count !== 1) return serializeFortune(f);

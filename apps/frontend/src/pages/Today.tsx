@@ -37,6 +37,15 @@ export function Today() {
   const { data: live } = useGetFortuneQuery(today ? today.fortune.id : skipToken, { pollingInterval: pollMs });
   const fortune = live ?? today?.fortune;
   useEffect(() => { setPollMs(fortune?.status === 'PENDING' ? 2000 : 0); }, [fortune?.status]);
+
+  // If the backend restarts mid-interpretation, GET alone would poll a stale PENDING fortune forever
+  // (only POST /fortunes/today re-claims it). Re-open just past the server's staleMs while pending.
+  useEffect(() => {
+    if (fortune?.status !== 'PENDING') return;
+    const timer = setInterval(() => void open(), 130_000);
+    return () => clearInterval(timer);
+  }, [fortune?.status, open]);
+
   const endRitual = useCallback(() => setRitual(false), []);
 
   if (failedToOpen) {

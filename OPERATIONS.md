@@ -21,7 +21,9 @@ some GitHub screens — set whichever wording you see). A pull request from a fo
 without this approval requirement it could change `runs-on` to the self-hosted runner and execute code on S2.
 
 1. Settings → Actions → General → *Workflow permissions* → **Read repository contents** (default token read-only).
-2. Confirm only `deploy.yml` uses the self-hosted runner: `grep -n self-hosted .github/workflows/*.yml`.
+2. Confirm only `deploy.yml` uses the self-hosted runner: `grep -n self-hosted .github/workflows/*.yml`. Even with
+   "Require approval for all external contributors" on, never approve a fork PR that touches `.github/workflows/**`
+   without reading the diff first — approving it lets its edited workflow run on the self-hosted runner.
 3. Branch protection on `main`: require PRs from others; require the `CI` check.
 
 The Deploy workflow will queue forever until the runner exists (step 6). Disable it until then:
@@ -134,10 +136,14 @@ Anthropic key, no Redis/worker/MinIO).
 
 **Logs:** `docker compose -f docker-compose.prod.yml logs -f backend` (look for `oracle attempt failed`).
 
-**A fortune stuck or failed:** the user just reopens the app — a `FAILED` fortune or one `PENDING` for more than two
-minutes is retried automatically on the next visit, with the same draws. A fortune stuck in `PENDING` is retried
-automatically after 2 minutes; a fortune whose interpretation crashes is marked `FAILED` and retried when the user
-taps "Try again". To inspect:
+**A fortune stuck or failed:** a `FAILED` fortune, or one `PENDING` for more than two minutes, is retried with the
+same draws on the next visit — every page open calls `/today`, which re-claims it. An open Today page also re-asks
+`/today` roughly every 2 minutes on its own while a reading is still pending, so a backend restart mid-interpretation
+recovers on its own without the user reloading. A crash while building the prompt ends the fortune as `FAILED`
+straight away, and the user can tap "Try again" to retry immediately rather than waiting out the 2-minute window.
+(A `FAILED` fortune stops being retried automatically once it has accumulated 8 attempts, to cap cost on a
+persistently broken reading — this is rare and shows up as a fortune stuck `FAILED` with `attempts >= 8` below.) To
+inspect:
 ```bash
 docker exec shared-infra-postgresql-1 psql -U postgres -d third_eye -c \
   "SELECT id, user_sub, date, status, attempts, last_error FROM fortunes WHERE status <> 'READY' ORDER BY date DESC LIMIT 20;"

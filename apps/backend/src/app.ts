@@ -2,7 +2,7 @@ import Fastify, { type FastifyError, type FastifyInstance, type FastifyServerOpt
 import cookie from '@fastify/cookie';
 import rateLimit from '@fastify/rate-limit';
 import type { PrismaClient } from '@prisma/client';
-import { AppError } from './errors.js';
+import { AppError, sanitizeErrorLog } from './errors.js';
 import { makeRequireAuth } from './auth/middleware.js';
 import { registerAuthRoutes, type AuthRouteDeps } from './auth/routes.js';
 import { registerDevBypass } from './auth/dev-bypass.js';
@@ -77,7 +77,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     if (status && status >= 400 && status < 500) {
       return reply.code(status).send({ error: { code: 'validation_error', message: err.message } });
     }
-    req.log.error({ err }, 'unhandled error');
+    req.log.error(sanitizeErrorLog(err), 'unhandled error');
     return reply.code(500).send({ error: { code: 'internal', message: 'Internal error' } });
   });
   app.setNotFoundHandler((_req, reply) =>
