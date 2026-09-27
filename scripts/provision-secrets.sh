@@ -37,9 +37,9 @@ DB_PW=$(ssh -o BatchMode=yes S2 'cat /root/.third-eye-db-pw')
 say "== Building the secret document =="
 export SESSION_SECRET DB_PW OIDC_CLIENT_ID OIDC_CLIENT_SECRET ANTHROPIC_KEY
 KV_JSON=$(python - <<'PY'
-import json, os
+import json, os, urllib.parse
 print(json.dumps({
-  "DATABASE_URL": f"postgresql://third_eye:{os.environ['DB_PW']}@postgresql:5432/third_eye",
+  "DATABASE_URL": f"postgresql://third_eye:{urllib.parse.quote(os.environ['DB_PW'], safe='')}@postgresql:5432/third_eye",
   "SESSION_SECRET": os.environ["SESSION_SECRET"],
   "SESSION_COOKIE_SECURE": "true",
   "FRONTEND_ORIGIN": "https://third-eye.wispy-nook.casa",
@@ -61,11 +61,11 @@ APP_TOKEN=$(printf '%s\n%s\n' "$VAULT_ROOT_TOKEN" "$KV_JSON" | ssh -o BatchMode=
   set -euo pipefail
   export VAULT_ADDR=http://127.0.0.1:8200
   read -r VAULT_TOKEN; export VAULT_TOKEN
-  umask 077; tmp=$(mktemp -p /dev/shm third-eye.XXXXXX); trap "rm -f $tmp" EXIT
+  umask 077; tmp=$(mktemp -p /dev/shm third-eye.XXXXXX); trap 'rm -f "$tmp"' EXIT HUP INT TERM
   cat > "$tmp"
   vault token lookup >/dev/null || { echo "Vault rejected the root token" >&2; exit 1; }
   printf "path \"secret/data/third-eye\" { capabilities = [\"read\"] }\n" | vault policy write third-eye - >&2
-  vault kv put secret/third-eye @"$tmp" >/dev/null && echo "kv written" >&2
+  vault kv put secret/third-eye @"$tmp" >/dev/null; echo "kv written" >&2
   if ! grep -q "^third-eye " /opt/vault/app-tokens 2>/dev/null; then
     bash /opt/vault/add-app-token.sh third-eye third-eye >&2
   else
@@ -80,9 +80,11 @@ printf '%s' "$APP_TOKEN" | ssh -o BatchMode=yes S2 'umask 077; cat > /root/.thir
 
 say "== Verifying the app token can read the secret (from S2, via the same URL the container uses) =="
 ssh -o BatchMode=yes S2 '
-  code=$(curl -s -o /dev/null -w "%{http_code}" --cacert /usr/local/share/ca-certificates/cloudflare-origin-ca.crt \
-    -H "X-Vault-Token: $(cat /root/.third-eye-vault-token)" https://vault.wispy-nook.casa/v1/secret/data/third-eye)
-  echo "GET secret/data/third-eye with the app token -> HTTP $code (want 200)" >&2'
+  set -euo pipefail
+  code=$(printf "X-Vault-Token: %s\n" "$(cat /root/.third-eye-vault-token)" | curl -s -o /dev/null -w "%{http_code}" --cacert /usr/local/share/ca-certificates/cloudflare-origin-ca.crt \
+    -H @- https://vault.wispy-nook.casa/v1/secret/data/third-eye)
+  echo "GET secret/data/third-eye with the app token -> HTTP $code (want 200)" >&2
+  [ "$code" = 200 ] || { echo "verification failed" >&2; exit 1; }'
 
 unset VAULT_ROOT_TOKEN OIDC_CLIENT_SECRET ANTHROPIC_KEY SESSION_SECRET DB_PW KV_JSON APP_TOKEN
 say "Done. Next: OPERATIONS step 6 (checkout on S2, move the token into place, register the runner)."

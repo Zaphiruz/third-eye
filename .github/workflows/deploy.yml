@@ -16,19 +16,21 @@ jobs:
     # workflow_run also fires for CI runs on forks' PRs. These guards make sure only a green CI run
     # for a push to main of THIS repository can reach the self-hosted runner.
     if: >-
-      ${{ github.event_name == 'workflow_dispatch' ||
+      ${{ (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
           (github.event.workflow_run.conclusion == 'success' &&
            github.event.workflow_run.event == 'push' &&
            github.event.workflow_run.head_branch == 'main' &&
            github.event.workflow_run.head_repository.full_name == github.repository) }}
     runs-on: [self-hosted, third-eye]
     defaults: { run: { working-directory: /opt/third-eye } }
+    env:
+      SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
     steps:
       - name: Check out the exact commit CI validated
         run: |
           set -euo pipefail
           git fetch origin
-          git checkout --detach "${{ github.event.workflow_run.head_sha || github.sha }}"
+          git checkout --detach "$SHA"
 
       - name: Build images
         run: |
@@ -43,9 +45,11 @@ jobs:
         run: |
           set -euo pipefail
           source .env
-          DB_URL=$(curl -sf -H "X-Vault-Token: $VAULT_TOKEN" "$VAULT_ADDR/v1/secret/data/third-eye" \
+          DB_URL=$(printf 'X-Vault-Token: %s\n' "$VAULT_TOKEN" | curl -sf -H @- "$VAULT_ADDR/v1/secret/data/third-eye" \
             | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['data']['DATABASE_URL'])")
-          docker compose -f docker-compose.prod.yml run --rm --no-deps -e DATABASE_URL="$DB_URL" backend \
+          echo "::add-mask::$DB_URL"
+          export DATABASE_URL="$DB_URL"
+          docker compose -f docker-compose.prod.yml run --rm --no-deps -e DATABASE_URL backend \
             apps/backend/node_modules/.bin/prisma migrate deploy --schema apps/backend/prisma/schema.prisma
 
       - name: Deploy
