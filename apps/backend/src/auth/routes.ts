@@ -45,7 +45,17 @@ export function registerAuthRoutes(app: FastifyInstance, deps: AuthRouteDeps): v
     try {
       info = await deps.oidcClient.exchange({ code, state, nonce: payload.nonce, codeVerifier: payload.codeVerifier });
     } catch (err) {
-      req.log.error({ err }, 'oidc exchange failed');
+      // openid-client's RPError copies extra fields onto the error (e.g. `jwt` on ID-token
+      // validation failures, `params` with the auth code on iss failures) that pino would
+      // serialize wholesale. Log only a sanitized shape — never the raw error object.
+      req.log.error(
+        {
+          errName: (err as Error)?.name,
+          errMessage: (err as Error)?.message,
+          opError: (err as { error?: unknown })?.error,
+        },
+        'oidc exchange failed',
+      );
       throw bad('Token exchange failed');
     }
     const name = info.name?.trim() || info.preferred_username?.trim() || info.email || info.sub;

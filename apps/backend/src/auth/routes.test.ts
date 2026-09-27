@@ -1,3 +1,4 @@
+import { Writable } from 'node:stream';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { createTestApp, type TestCtx } from '../test/helpers/test-app.js';
 import { resetDatabase } from '../test/helpers/db.js';
@@ -64,5 +65,38 @@ describe('auth', () => {
 
   it('dev-login does not exist unless devBypass is on', async () => {
     expect((await ctx.call(null, 'GET', '/api/auth/dev-login?sub=x')).status).toBe(404);
+  });
+
+  it('never logs the raw oidc error (openid-client RPErrors carry the id token / auth code)', async () => {
+    const lines: string[] = [];
+    const stream = new Writable({
+      write(chunk, _enc, cb) {
+        lines.push(String(chunk));
+        cb();
+      },
+    });
+    const local = await createTestApp({ logger: { stream, level: 'error' } });
+    try {
+      const err = new Error('nonce mismatch') as Error & { jwt?: string; params?: unknown };
+      err.name = 'RPError';
+      // Mirrors openid-client 5.x RPError, which copies these enumerable fields onto the error.
+      err.jwt = 'eyJ.secret.token';
+      err.params = { code: 'c', state: 'state-0' };
+      local.fakeOidc.exchange = async () => { throw err; };
+
+      const login = await local.call(null, 'GET', '/api/auth/login');
+      const state = cookieFrom(login.headers, 'third_eye_oidc')!;
+      const cb = await local.call(null, 'GET', '/api/auth/callback?code=c&state=state-0', undefined, { cookie: state });
+      expect(cb.status).toBe(400);
+
+      const output = lines.join('');
+      expect(output).toContain('oidc exchange failed');
+      expect(output).not.toContain('eyJ.secret.token');
+      expect(output).not.toContain('"jwt"');
+      expect(output).not.toContain('"params"');
+      expect(output).not.toContain('"code":"c"');
+    } finally {
+      await local.close();
+    }
   });
 });

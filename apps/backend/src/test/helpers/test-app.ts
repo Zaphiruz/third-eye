@@ -1,4 +1,4 @@
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, FastifyServerOptions } from 'fastify';
 import type { BloodType, Persona, PrismaClient } from '@prisma/client';
 import { buildApp } from '../../app.js';
 import { createSessionStore } from '../../auth/session.js';
@@ -25,13 +25,19 @@ export interface TestCtx {
   close(): Promise<void>;
 }
 
-export async function createTestApp(): Promise<TestCtx> {
+export interface CreateTestAppOpts {
+  /** Passthrough to buildApp, e.g. to point Fastify's pino logger at an in-memory stream for log assertions. */
+  logger?: FastifyServerOptions['logger'];
+}
+
+export async function createTestApp(opts: CreateTestAppOpts = {}): Promise<TestCtx> {
   const prisma = getTestPrisma();
   const fakeOidc = new FakeOidcClient();
   const sessions = createSessionStore(prisma, 3600);
   const app = await buildApp({
     prisma, frontendOrigin: TEST_ORIGIN, sessionSecret: 'test-secret', cookieSecure: false,
     oidcClient: fakeOidc, adminGroup: 'third-eye-admins', devBypass: false, disableRateLimit: true,
+    ...(opts.logger !== undefined ? { logger: opts.logger } : {}),
   });
   await app.ready();
   let n = 0;
