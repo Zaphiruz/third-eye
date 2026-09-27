@@ -137,6 +137,8 @@ model FortuneResult {
 
 `profileSnapshot` and `persona` are frozen per fortune so history stays accurate if the profile changes later.
 
+> **Amendment (implementation planning, 2026-09-26):** `User` and `Session` follow Plantry's proven shapes exactly: `User.sub` (the Authentik subject) is the primary key (no separate cuid/`authentikSub`), and `Session` stores only `idHash` (SHA-256 of the cookie token) plus a `data` JSON (`{groups, idToken?}`) — the raw token is never stored. `isAdmin` is derived per request from the session's groups rather than persisted. Foreign keys are therefore `userSub`. Tables use snake_case `@@map` names like Plantry.
+
 ## 5. API
 
 All under `/api`; all require a session unless marked *public*.
@@ -190,6 +192,8 @@ The frontend renders result `data` using reference data it imports from `divinat
 4. Success → one transaction: set `summary`, each `reading`, `status=READY`, `model`, `promptVersion`, `completedAt`.
 5. Failure (timeout 45s, API error, invalid output) → retry once. Second failure → `status=FAILED`, `lastError`, `attempts++`.
 6. Model from `ANTHROPIC_MODEL` (default `claude-sonnet-5`). `PROMPT_VERSION` constant in code, bumped on prompt changes.
+
+> **Amendment (implementation planning, 2026-09-26):** instead of a forced tool call, use Claude **structured outputs** — `output_config: { format: { type: 'json_schema', schema } }` on `messages.create` (current API; forced `tool_choice` is rejected on newer models). The schema is built per fortune from the methods present; the text block is `JSON.parse`d and re-validated with zod. A `refusal` or `max_tokens` stop reason counts as a failed attempt. SDK retries are disabled (`maxRetries: 0`) so the oracle's own "retry once" rule is the only retry.
 
 Personas live in `oracle/personas.ts` as `{ id, name, tagline, sampleLine, systemPrompt }`; `name`, `tagline`, and `sampleLine` are also exported to the frontend via `shared` for onboarding.
 
