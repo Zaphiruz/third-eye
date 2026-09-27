@@ -15,3 +15,5 @@ export * from './data/runes.js';
 export * from './runes.js';
 export * from './data/hexagrams.js';
 export * from './iching.js';
+export * from './cast.js';
+export * from './describe.js';

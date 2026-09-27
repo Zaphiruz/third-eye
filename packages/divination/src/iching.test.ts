@@ -40,7 +40,7 @@ describe('castIChing', () => {
       lines: [9, 9, 9, 9, 9, 9], primary: 1, changingLines: [1, 2, 3, 4, 5, 6], relating: 2,
     });
   });
-  it('two tails one head on every line → young yin, no relating hexagram', () => {
+  it('two heads one tail on every line → young yin, no relating hexagram', () => {
     expect(castIChing(scripted(Array(6).fill([1, 1, 0]).flat()))).toEqual({
       lines: [8, 8, 8, 8, 8, 8], primary: 2, changingLines: [], relating: null,
     });
