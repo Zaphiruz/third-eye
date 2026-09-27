@@ -24,18 +24,29 @@ function TarotStep({ data, reduced }: { data: TarotData; reduced: boolean }) {
   const flipped = useTicker(data.cards.length, reduced ? 150 : 800);
   return (
     <div className="flex justify-center gap-3">
-      {data.cards.map((c, i) => (
-        <div key={c.id} className="flex w-24 flex-col items-center gap-2">
-          <motion.div
-            initial={reduced ? { opacity: 0 } : { rotateY: 180, y: -30, opacity: 0 }}
-            animate={i < flipped ? { rotateY: 0, y: 0, opacity: 1 } : { rotateY: 180, y: 0, opacity: 1 }}
-            transition={{ duration: reduced ? 0.2 : 0.7 }}
-          >
-            <TarotCard cardId={c.id} reversed={c.reversed} faceDown={i >= flipped} className="w-24" />
-          </motion.div>
-          <span className="text-xs uppercase tracking-widest text-mist/60">{c.position}</span>
-        </div>
-      ))}
+      {data.cards.map((c, i) => {
+        const revealed = i < flipped;
+        return (
+          <div key={c.id} className="flex w-24 flex-col items-center gap-2">
+            {reduced ? (
+              // Reduced motion: no rotation or translation, just an opacity cross-fade as the
+              // card flips (re-keying on `revealed` re-triggers the fade instead of a rotation).
+              <motion.div key={revealed ? 'up' : 'down'} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
+                <TarotCard cardId={c.id} reversed={c.reversed} faceDown={!revealed} className="w-24" />
+              </motion.div>
+            ) : (
+              <motion.div
+                initial={{ rotateY: 180, y: -30, opacity: 0 }}
+                animate={revealed ? { rotateY: 0, y: 0, opacity: 1 } : { rotateY: 180, y: 0, opacity: 1 }}
+                transition={{ duration: 0.7 }}
+              >
+                <TarotCard cardId={c.id} reversed={c.reversed} faceDown={!revealed} className="w-24" />
+              </motion.div>
+            )}
+            <span className="text-xs uppercase tracking-widest text-mist/60">{c.position}</span>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -44,7 +55,7 @@ function RuneStep({ data, reduced }: { data: RuneData; reduced: boolean }) {
   return (
     <motion.div className="flex justify-center"
       initial={reduced ? { opacity: 0 } : { y: -80, rotate: -25, opacity: 0 }}
-      animate={{ y: 0, rotate: 0, opacity: 1 }}
+      animate={reduced ? { opacity: 1 } : { y: 0, rotate: 0, opacity: 1 }}
       transition={reduced ? { duration: 0.2 } : { type: 'spring', stiffness: 120, damping: 12 }}>
       <RuneStone runeId={data.id} reversed={data.reversed} className="w-28" />
     </motion.div>
