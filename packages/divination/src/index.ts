@@ -7,3 +7,5 @@ export * from './data/chinese.js';
 export * from './chinese.js';
 export * from './data/numbers.js';
 export * from './numerology.js';
+export * from './data/blood-types.js';
+export * from './bloodtype.js';
