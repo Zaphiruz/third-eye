@@ -70,4 +70,14 @@ describe('useRitual', () => {
     act(() => { vi.advanceTimersByTime(10_000); });
     expect(result.current.done).toBe(true);
   });
+
+  it('readiness flipping mid-step does not restart that step\'s timer', () => {
+    // The server reading often finishes while an earlier step (e.g. the tarot draw) is still
+    // animating; that must not reset the in-flight timer for that step.
+    const { result, rerender } = renderHook(({ ready }) => useRitual(durations, ready), { initialProps: { ready: false } });
+    act(() => { vi.advanceTimersByTime(700); });
+    rerender({ ready: true });
+    act(() => { vi.advanceTimersByTime(300); });
+    expect(result.current.index).toBe(1);
+  });
 });

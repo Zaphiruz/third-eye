@@ -13,6 +13,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
  * purely to force that effect to tear down the in-flight timer and restart the chain from the
  * post-skip index, so a skip actually cancels/replaces the running timer instead of leaving a
  * stale one that later fires with a step number computed before the skip.
+ *
+ * `ready` is deliberately NOT a dependency of that same effect: readiness must never interrupt an
+ * earlier step (index < last) that's mid-timer — e.g. the server reading often finishes while the
+ * tarot step is still animating, and that must not reset the tarot timer. A separate effect below
+ * watches `ready` and only acts (by bumping `gen`, which restarts the chain) when we're actually
+ * parked on the last step waiting for it.
  */
 export function useRitual(durations: number[], ready: boolean) {
   const last = durations.length - 1;
@@ -50,7 +56,13 @@ export function useRitual(durations: number[], ready: boolean) {
     scheduleFrom(indexRef.current);
     return () => { cancelled = true; if (timer !== undefined) clearTimeout(timer); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gen, ready]);
+  }, [gen]);
+
+  // Only relevant once we're parked on the last step: kicks off its timer once `ready` flips true.
+  useEffect(() => {
+    if (ready && indexRef.current === last) setGen((g) => g + 1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready]);
 
   const skip = useCallback(() => {
     const i = indexRef.current;
