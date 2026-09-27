@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import { buildApp } from './app.js';
 import { loadConfig } from './config.js';
 import { loggerOptions } from './logging.js';
+import { createOidcClient } from './auth/oidc.js';
 
 const config = loadConfig();
 const prisma = new PrismaClient();
@@ -13,6 +14,9 @@ const app = await buildApp({
   frontendOrigin: config.frontendOrigin,
   sessionSecret: config.sessionSecret,
   cookieSecure: config.cookieSecure,
+  adminGroup: config.adminGroup,
+  devBypass: config.devBypass,
+  oidcClient: createOidcClient(config.oidc),
 });
 
 for (const sig of ['SIGINT', 'SIGTERM'] as const) {

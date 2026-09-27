@@ -3,6 +3,12 @@ import cookie from '@fastify/cookie';
 import rateLimit from '@fastify/rate-limit';
 import type { PrismaClient } from '@prisma/client';
 import { AppError } from './errors.js';
+import { makeRequireAuth } from './auth/middleware.js';
+import { registerAuthRoutes, type AuthRouteDeps } from './auth/routes.js';
+import { registerDevBypass } from './auth/dev-bypass.js';
+import { createSessionStore } from './auth/session.js';
+import type { OidcClient } from './auth/oidc.js';
+import { registerProfileRoutes } from './profile/routes.js';
 
 export interface BuildAppOptions {
   logger?: FastifyServerOptions['logger'];
@@ -14,6 +20,10 @@ export interface BuildAppOptions {
   rateLimitMax?: number;
   /** Proxy hops to trust for req.ip / X-Forwarded-For. 0 (default) trusts none. */
   trustProxyHops?: number;
+  oidcClient: OidcClient;
+  adminGroup?: string;
+  sessionTtlSeconds?: number;
+  devBypass?: boolean;
 }
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
@@ -61,6 +71,14 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     reply.code(404).send({ error: { code: 'not_found', message: 'Not found' } }),
   );
 
+  const cookieName = 'third_eye_sid';
+  const ttlSeconds = options.sessionTtlSeconds ?? 7 * 24 * 60 * 60;
+  const adminGroup = options.adminGroup ?? 'third-eye-admins';
+  const sessionStore = createSessionStore(options.prisma, ttlSeconds);
+  app.decorate('requireAuth', makeRequireAuth({
+    prisma: options.prisma, sessionStore, cookieName, cookieSecure: options.cookieSecure, ttlSeconds, adminGroup,
+  }));
+
   app.get('/health', async () => ({ status: 'ok' }));
   app.get('/api/ready', async (req, reply) => {
     try {
@@ -71,6 +89,14 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
       return reply.code(503).send({ status: 'degraded' });
     }
   });
+
+  const authDeps: AuthRouteDeps = {
+    prisma: options.prisma, sessionStore, oidcClient: options.oidcClient, cookieName,
+    cookieSecure: options.cookieSecure, ttlSeconds, frontendOrigin: options.frontendOrigin,
+  };
+  registerAuthRoutes(app, authDeps);
+  if (options.devBypass) registerDevBypass(app, authDeps, adminGroup);
+  registerProfileRoutes(app, { prisma: options.prisma });
 
   return app;
 }
