@@ -1,0 +1,32 @@
+name: CI
+on:
+  push:
+    paths-ignore: ["**.md", "docs/**", ".env.example"]
+  pull_request:
+    paths-ignore: ["**.md", "docs/**", ".env.example"]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env: { POSTGRES_USER: third_eye, POSTGRES_PASSWORD: third_eye, POSTGRES_DB: third_eye_test }
+        ports: ["5435:5432"]
+        options: >-
+          --health-cmd "pg_isready -U third_eye" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgres://third_eye:third_eye@localhost:5435/third_eye_test
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with: { node-version: 20, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build

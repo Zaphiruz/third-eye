@@ -1,0 +1,11 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: third_eye
+      POSTGRES_PASSWORD: third_eye
+      POSTGRES_DB: third_eye
+    ports: ["5435:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+volumes:
+  pgdata:
