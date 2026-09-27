@@ -19,6 +19,19 @@ describe('symbols', () => {
     expect(screen.getByRole('img', { name: 'Ansuz (reversed)' })).toBeInTheDocument();
   });
 
+  it('gives each rune stone instance a unique gradient id', () => {
+    const { container } = render(<><RuneStone runeId="ansuz" reversed={false} /><RuneStone runeId="ansuz" reversed={false} /></>);
+    const gradients = container.querySelectorAll('radialGradient');
+    expect(gradients).toHaveLength(2);
+    const ids = Array.from(gradients).map((g) => g.id);
+    expect(new Set(ids).size).toBe(2);
+    const ellipses = container.querySelectorAll('ellipse');
+    expect(ellipses).toHaveLength(2);
+    ellipses.forEach((ellipse, i) => {
+      expect(ellipse.getAttribute('fill')).toBe(`url(#${ids[i]})`);
+    });
+  });
+
   it('draws six lines and marks the changing ones', () => {
     const { container } = render(<Hexagram lines={[9, 8, 7, 6, 7, 8]} />);
     const lines = container.querySelectorAll('[data-line]');
