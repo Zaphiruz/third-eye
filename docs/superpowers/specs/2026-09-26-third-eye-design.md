@@ -191,7 +191,7 @@ The frontend renders result `data` using reference data it imports from `divinat
 3. Validate with zod: every present method has a non-empty reading; no extra methods.
 4. Success → one transaction: set `summary`, each `reading`, `status=READY`, `model`, `promptVersion`, `completedAt`.
 5. Failure (timeout 45s, API error, invalid output) → retry once. Second failure → `status=FAILED`, `lastError`, `attempts++`.
-6. Model from `ANTHROPIC_MODEL` (default `claude-sonnet-5`). `PROMPT_VERSION` constant in code, bumped on prompt changes.
+6. Model from `ANTHROPIC_MODEL` (default `claude-haiku-4-5` since 2026-09-27; `claude-sonnet-5` or `claude-opus-5` for richer readings). `PROMPT_VERSION` constant in code, bumped on prompt changes.
 
 > **Amendment (implementation planning, 2026-09-26):** instead of a forced tool call, use Claude **structured outputs** — `output_config: { format: { type: 'json_schema', schema } }` on `messages.create` (current API; forced `tool_choice` is rejected on newer models). The schema is built per fortune from the methods present; the text block is `JSON.parse`d and re-validated with zod. A `refusal` or `max_tokens` stop reason counts as a failed attempt. SDK retries are disabled (`maxRetries: 0`) so the oracle's own "retry once" rule is the only retry.
 

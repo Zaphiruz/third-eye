@@ -18,3 +18,11 @@ describe('buildMessageParams', () => {
     expect(p.output_config?.effort).toBe('high');
   });
 });
+
+describe('buildMessageParams on Haiku', () => {
+  it('omits effort (not supported on Haiku 4.5) but keeps structured output and thinking off', () => {
+    const p = buildMessageParams({ apiKey: 'k', model: 'claude-haiku-4-5', thinking: 'off', effort: 'medium' }, req);
+    expect(p.thinking).toEqual({ type: 'disabled' });
+    expect(p.output_config).toEqual({ format: { type: 'json_schema', schema: { type: 'object' } } });
+  });
+});

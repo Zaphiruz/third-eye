@@ -12,7 +12,7 @@ describe('loadConfig', () => {
     const c = loadConfig(base);
     expect(c.port).toBe(3000);
     expect(c.adminGroup).toBe('third-eye-admins');
-    expect(c.anthropic).toEqual({ apiKey: 'sk-test', model: 'claude-sonnet-5', thinking: 'off', effort: 'medium' });
+    expect(c.anthropic).toEqual({ apiKey: 'sk-test', model: 'claude-haiku-4-5', thinking: 'off', effort: 'medium' });
     expect(c.trustProxyHops).toBe(0);
   });
   it('refuses to start without an Anthropic key', () => {
@@ -26,11 +26,15 @@ describe('loadConfig', () => {
     expect(loadConfig({ ...base, ANTHROPIC_MODEL: 'claude-opus-5' }).anthropic.model).toBe('claude-opus-5');
   });
   it('reads the thinking and effort settings', () => {
-    const c = loadConfig({ ...base, ANTHROPIC_THINKING: 'adaptive', ANTHROPIC_EFFORT: 'low' });
+    const c = loadConfig({ ...base, ANTHROPIC_MODEL: 'claude-sonnet-5', ANTHROPIC_THINKING: 'adaptive', ANTHROPIC_EFFORT: 'low' });
     expect(c.anthropic).toMatchObject({ thinking: 'adaptive', effort: 'low' });
   });
   it('rejects unknown thinking and effort values', () => {
     expect(() => loadConfig({ ...base, ANTHROPIC_THINKING: 'maybe' })).toThrow('ANTHROPIC_THINKING');
     expect(() => loadConfig({ ...base, ANTHROPIC_EFFORT: 'extreme' })).toThrow('ANTHROPIC_EFFORT');
+  });
+  it('refuses adaptive thinking on Haiku, which does not support it', () => {
+    expect(() => loadConfig({ ...base, ANTHROPIC_MODEL: 'claude-haiku-4-5', ANTHROPIC_THINKING: 'adaptive' })).toThrow('ANTHROPIC_THINKING');
+    expect(loadConfig({ ...base, ANTHROPIC_MODEL: 'claude-sonnet-5', ANTHROPIC_THINKING: 'adaptive' }).anthropic.thinking).toBe('adaptive');
   });
 });

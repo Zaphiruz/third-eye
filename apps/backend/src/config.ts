@@ -11,8 +11,9 @@ export const EFFORT_LEVELS = ['low', 'medium', 'high'] as const;
 export interface AnthropicSettings {
   apiKey: string;
   model: string;
-  /** 'off' (default) is faster and cheaper; 'adaptive' lets the model think before writing. */
+  /** 'off' (default) is faster and cheaper; 'adaptive' lets the model think before writing (not on Haiku). */
   thinking: (typeof THINKING_MODES)[number];
+  /** Ignored on Haiku, which doesn't support it. */
   effort: (typeof EFFORT_LEVELS)[number];
 }
 type Env = Record<string, string | undefined>;
@@ -21,6 +22,18 @@ function oneOf<T extends string>(name: string, allowed: readonly T[], raw: strin
   if (raw === undefined || raw === '') return fallback;
   if (!(allowed as readonly string[]).includes(raw)) throw new Error(`${name} must be one of: ${allowed.join(', ')}`);
   return raw as T;
+}
+
+/** Haiku 4.5 takes neither adaptive thinking nor the effort setting. */
+export const isHaikuModel = (model: string): boolean => model.startsWith('claude-haiku');
+
+function anthropicSettings(env: Env, apiKey: string): AnthropicSettings {
+  const model = env['ANTHROPIC_MODEL'] || 'claude-haiku-4-5';
+  const thinking = oneOf('ANTHROPIC_THINKING', THINKING_MODES, env['ANTHROPIC_THINKING'], 'off');
+  if (thinking === 'adaptive' && isHaikuModel(model)) {
+    throw new Error(`ANTHROPIC_THINKING=adaptive is not supported on ${model}; use off or a Sonnet/Opus model`);
+  }
+  return { apiKey, model, thinking, effort: oneOf('ANTHROPIC_EFFORT', EFFORT_LEVELS, env['ANTHROPIC_EFFORT'], 'medium') };
 }
 
 /** Proxy hops that may set X-Forwarded-For. Defaults to 0 (trust nothing) so misconfiguration fails closed. */
@@ -55,11 +68,6 @@ export function loadConfig(env: Env = process.env): AppConfig {
       clientSecret: required('AUTHENTIK_CLIENT_SECRET'), redirectUri: required('AUTHENTIK_REDIRECT_URI'),
     },
     // The oracle is the product: no key, no start.
-    anthropic: {
-      apiKey: required('ANTHROPIC_API_KEY'),
-      model: env['ANTHROPIC_MODEL'] || 'claude-sonnet-5',
-      thinking: oneOf('ANTHROPIC_THINKING', THINKING_MODES, env['ANTHROPIC_THINKING'], 'off'),
-      effort: oneOf('ANTHROPIC_EFFORT', EFFORT_LEVELS, env['ANTHROPIC_EFFORT'], 'medium'),
-    },
+    anthropic: anthropicSettings(env, required('ANTHROPIC_API_KEY')),
   };
 }

@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
-import type { AnthropicSettings } from '../config.js';
+import { isHaikuModel, type AnthropicSettings } from '../config.js';
 import type { OracleClient, OracleRequest } from './types.js';
 
 export interface AnthropicOracleConfig extends AnthropicSettings { timeoutMs?: number }
@@ -11,7 +11,10 @@ export function buildMessageParams(cfg: AnthropicOracleConfig, req: OracleReques
     system: req.system,
     messages: [{ role: 'user', content: req.user }],
     thinking: cfg.thinking === 'adaptive' ? { type: 'adaptive' } : { type: 'disabled' },
-    output_config: { effort: cfg.effort, format: { type: 'json_schema', schema: req.schema } },
+    output_config: {
+      ...(isHaikuModel(cfg.model) ? {} : { effort: cfg.effort }),
+      format: { type: 'json_schema', schema: req.schema },
+    },
   };
 }
 

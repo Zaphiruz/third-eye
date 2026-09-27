@@ -149,12 +149,14 @@ docker exec shared-infra-postgresql-1 psql -U postgres -d third_eye -c \
   "SELECT id, user_sub, date, status, attempts, last_error FROM fortunes WHERE status <> 'READY' ORDER BY date DESC LIMIT 20;"
 ```
 
-**Change the model:** `vault kv patch secret/third-eye ANTHROPIC_MODEL=<model id>` on LC3, then
+**Change the model:** the default is `claude-haiku-4-5` (cheapest, ~0.7¢/reading). For richer readings use
+`claude-sonnet-5` (~1.5¢) or `claude-opus-5`. `vault kv patch secret/third-eye ANTHROPIC_MODEL=<model id>` on LC3, then
 `docker compose -f docker-compose.prod.yml restart backend`. New fortunes record the model used.
 
 **Tune reading quality vs. speed/cost:** `ANTHROPIC_THINKING` is `off` by default (fastest, cheapest); set it to
-`adaptive` to let the model think before writing (richer readings, slower, costs more). `ANTHROPIC_EFFORT` is
-`low`, `medium` (default) or `high`. Change either with `vault kv patch secret/third-eye ANTHROPIC_THINKING=adaptive`
+`adaptive` to let the model think before writing (richer readings, slower, costs more; Sonnet/Opus only — the
+backend refuses to start with adaptive on Haiku). `ANTHROPIC_EFFORT` is
+`low`, `medium` (default) or `high` (ignored on Haiku). Change either with `vault kv patch secret/third-eye ANTHROPIC_THINKING=adaptive`
 (or `ANTHROPIC_EFFORT=…`) on LC3, then restart the backend. An invalid value stops the backend at startup with a
 clear error. If readings start timing out (`oracle attempt failed` with a timeout in the logs), lower effort or turn
 thinking off.
