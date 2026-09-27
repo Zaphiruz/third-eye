@@ -9,3 +9,5 @@ export * from './data/numbers.js';
 export * from './numerology.js';
 export * from './data/blood-types.js';
 export * from './bloodtype.js';
+export * from './data/tarot.js';
+export * from './tarot.js';
