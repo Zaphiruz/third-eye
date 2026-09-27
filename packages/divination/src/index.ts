@@ -5,3 +5,5 @@ export * from './western.js';
 export * from './data/lunar-new-year.js';
 export * from './data/chinese.js';
 export * from './chinese.js';
+export * from './data/numbers.js';
+export * from './numerology.js';
