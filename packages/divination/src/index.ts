@@ -2,3 +2,6 @@ export * from './types.js';
 export * from './rng.js';
 export * from './data/zodiac.js';
 export * from './western.js';
+export * from './data/lunar-new-year.js';
+export * from './data/chinese.js';
+export * from './chinese.js';
