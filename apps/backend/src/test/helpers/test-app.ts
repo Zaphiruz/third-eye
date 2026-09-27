@@ -3,8 +3,9 @@ import type { BloodType, Persona, PrismaClient } from '@prisma/client';
 import { buildApp } from '../../app.js';
 import { createSessionStore } from '../../auth/session.js';
 import { toDbDate } from '../../lib/dates.js';
+import { seededRng } from '@third-eye/divination';
 import { getTestPrisma } from './db.js';
-import { FakeOidcClient } from './fakes.js';
+import { FakeOidcClient, FakeOracleClient } from './fakes.js';
 
 export const TEST_ORIGIN = 'http://localhost:5174';
 export const TEST_COOKIE = 'third_eye_sid';
@@ -19,6 +20,10 @@ export interface TestCtx {
   app: FastifyInstance;
   prisma: PrismaClient;
   fakeOidc: FakeOidcClient;
+  fakeOracle: FakeOracleClient;
+  setNow(d: Date): void;
+  /** Await every background interpretation started so far. */
+  settle(): Promise<void>;
   call(user: TestUser | null, method: string, url: string, body?: unknown, extraHeaders?: Record<string, string>): Promise<CallResult>;
   /** Onboarded by default (birthDate 1990-06-15, UTC). Pass birthDate: null for a fresh user. */
   user(opts?: UserOpts): Promise<TestUser>;
@@ -33,10 +38,14 @@ export interface CreateTestAppOpts {
 export async function createTestApp(opts: CreateTestAppOpts = {}): Promise<TestCtx> {
   const prisma = getTestPrisma();
   const fakeOidc = new FakeOidcClient();
+  const fakeOracle = new FakeOracleClient();
+  let now = new Date('2026-09-26T15:00:00Z');
+  const pending: Promise<void>[] = [];
   const sessions = createSessionStore(prisma, 3600);
   const app = await buildApp({
     prisma, frontendOrigin: TEST_ORIGIN, sessionSecret: 'test-secret', cookieSecure: false,
     oidcClient: fakeOidc, adminGroup: 'third-eye-admins', devBypass: false, disableRateLimit: true,
+    oracleClient: fakeOracle, now: () => now, rng: seededRng(11), onInterpret: (p) => { pending.push(p); },
     ...(opts.logger !== undefined ? { logger: opts.logger } : {}),
   });
   await app.ready();
@@ -45,6 +54,9 @@ export async function createTestApp(opts: CreateTestAppOpts = {}): Promise<TestC
     app,
     prisma,
     fakeOidc,
+    fakeOracle,
+    setNow(d) { now = d; },
+    async settle() { await Promise.all(pending.splice(0)); },
     async call(user, method, url, body, extraHeaders = {}) {
       const res = await app.inject({
         method: method as 'GET',

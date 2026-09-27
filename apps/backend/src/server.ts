@@ -3,6 +3,7 @@ import { buildApp } from './app.js';
 import { loadConfig } from './config.js';
 import { loggerOptions } from './logging.js';
 import { createOidcClient } from './auth/oidc.js';
+import { createAnthropicOracleClient } from './oracle/client.js';
 
 const config = loadConfig();
 const prisma = new PrismaClient();
@@ -17,6 +18,7 @@ const app = await buildApp({
   adminGroup: config.adminGroup,
   devBypass: config.devBypass,
   oidcClient: createOidcClient(config.oidc),
+  oracleClient: createAnthropicOracleClient({ apiKey: config.anthropic.apiKey, model: config.anthropic.model }),
 });
 
 for (const sig of ['SIGINT', 'SIGTERM'] as const) {

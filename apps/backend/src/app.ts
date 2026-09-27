@@ -9,6 +9,12 @@ import { registerDevBypass } from './auth/dev-bypass.js';
 import { createSessionStore } from './auth/session.js';
 import type { OidcClient } from './auth/oidc.js';
 import { registerProfileRoutes } from './profile/routes.js';
+import type { Rng } from '@third-eye/divination';
+import { cryptoRng } from './lib/rng.js';
+import { createOracle } from './oracle/interpret.js';
+import type { OracleClient } from './oracle/types.js';
+import { createFortuneService } from './fortunes/service.js';
+import { registerFortuneRoutes } from './fortunes/routes.js';
 
 export interface BuildAppOptions {
   logger?: FastifyServerOptions['logger'];
@@ -24,6 +30,13 @@ export interface BuildAppOptions {
   adminGroup?: string;
   sessionTtlSeconds?: number;
   devBypass?: boolean;
+  oracleClient: OracleClient;
+  /** Injectable clock and randomness for tests. */
+  now?: () => Date;
+  rng?: Rng;
+  /** A PENDING fortune older than this is assumed orphaned (e.g. by a restart) and re-kicked. Default 2 min. */
+  staleMs?: number;
+  onInterpret?: (p: Promise<void>) => void;
 }
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
@@ -97,6 +110,14 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   registerAuthRoutes(app, authDeps);
   if (options.devBypass) registerDevBypass(app, authDeps, adminGroup);
   registerProfileRoutes(app, { prisma: options.prisma });
+
+  const oracle = createOracle({ prisma: options.prisma, client: options.oracleClient, log: app.log });
+  const fortunes = createFortuneService({
+    prisma: options.prisma, oracle, rng: options.rng ?? cryptoRng, now: options.now ?? (() => new Date()),
+    staleMs: options.staleMs ?? 2 * 60_000,
+    ...(options.onInterpret ? { onInterpret: options.onInterpret } : {}),
+  });
+  registerFortuneRoutes(app, { fortunes });
 
   return app;
 }
