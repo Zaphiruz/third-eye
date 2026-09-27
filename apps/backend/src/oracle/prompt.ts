@@ -9,7 +9,9 @@ export const PROMPT_VERSION = '2026-09-26.1';
 
 export interface PromptInput { persona: PersonaId; date: string; firstName: string | null; results: MethodResult[] }
 export interface OracleOutput { summary: string; readings: Partial<Record<Method, string>> }
-export class OracleOutputError extends Error {}
+export class OracleOutputError extends Error {
+  override name = 'OracleOutputError';
+}
 
 const RULES = [
   'You are the oracle of Third Eye, a daily fortune app that blends divination traditions from several cultures.',

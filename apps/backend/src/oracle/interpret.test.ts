@@ -86,6 +86,18 @@ describe('interpret', () => {
     await oracle().interpret('00000000-0000-4000-8000-000000000000');
     expect(fake.requests).toHaveLength(0);
   });
+
+  it('marks FAILED (not stuck PENDING) when building the prompt throws', async () => {
+    const f = await seedFortune(prisma, sub);
+    const tarot = f.results.find((r) => r.method === 'TAROT')!;
+    await prisma.fortuneResult.update({ where: { id: tarot.id }, data: { data: {} } });
+    await oracle().interpret(f.id);
+    const after = await load(f.id);
+    expect(after.status).toBe('FAILED');
+    expect(after.lastError).not.toBeNull();
+    expect(after.attempts).toBe(1);
+    expect(fake.requests).toHaveLength(0);
+  });
 });
 
 describe('firstNameOf', () => {

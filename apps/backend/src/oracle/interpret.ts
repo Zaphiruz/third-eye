@@ -70,7 +70,15 @@ export function createOracle(deps: { prisma: PrismaClient; client: OracleClient;
       try {
         await run(fortuneId);
       } catch (err) {
-        deps.log.error({ fortuneId, errMessage: errMessage(err) }, 'interpret crashed');
+        deps.log.error({ fortuneId, errType: (err as Error)?.name, errMessage: errMessage(err) }, 'interpret crashed');
+        try {
+          await deps.prisma.fortune.updateMany({
+            where: { id: fortuneId, status: 'PENDING' },
+            data: { status: 'FAILED', lastError: errMessage(err), attempts: { increment: 1 } },
+          });
+        } catch (markErr) {
+          deps.log.error({ fortuneId, errMessage: errMessage(markErr) }, 'failed to mark fortune FAILED after crash');
+        }
       } finally {
         inFlight.delete(fortuneId);
       }
