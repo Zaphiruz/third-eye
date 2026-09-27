@@ -8,14 +8,24 @@ import { useCallback, useEffect, useRef, useState } from 'react';
  * rather than relying on a `useEffect` keyed on `index` to notice a state change and re-schedule.
  * That keeps the whole chain advancing correctly under `vi.advanceTimersByTime`, whose single
  * call can cover several steps before React gets a chance to re-render in between.
+ *
+ * `gen` is bumped whenever `skip()` moves the index: it's a dependency of the scheduling effect
+ * purely to force that effect to tear down the in-flight timer and restart the chain from the
+ * post-skip index, so a skip actually cancels/replaces the running timer instead of leaving a
+ * stale one that later fires with a step number computed before the skip.
  */
 export function useRitual(durations: number[], ready: boolean) {
   const last = durations.length - 1;
-  const [index, setIndex] = useState(0);
+  const [index, setIndexState] = useState(0);
   const indexRef = useRef(index);
-  indexRef.current = index;
   const readyRef = useRef(ready);
   readyRef.current = ready;
+  const [gen, setGen] = useState(0);
+
+  const setIndex = useCallback((i: number) => {
+    indexRef.current = i;
+    setIndexState(i);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -26,14 +36,12 @@ export function useRitual(durations: number[], ready: boolean) {
       if (i < last) {
         timer = setTimeout(() => {
           if (cancelled) return;
-          indexRef.current = i + 1;
           setIndex(i + 1);
           scheduleFrom(i + 1);
         }, durations[i]);
       } else if (i === last && readyRef.current) {
         timer = setTimeout(() => {
           if (cancelled) return;
-          indexRef.current = last + 1;
           setIndex(last + 1);
         }, durations[last]);
       }
@@ -42,25 +50,15 @@ export function useRitual(durations: number[], ready: boolean) {
     scheduleFrom(indexRef.current);
     return () => { cancelled = true; if (timer !== undefined) clearTimeout(timer); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Covers the case where we're already parked on the last step and `ready` flips true later.
-  useEffect(() => {
-    if (indexRef.current === last && ready) {
-      const t = setTimeout(() => { indexRef.current = last + 1; setIndex(last + 1); }, durations[last]);
-      return () => clearTimeout(t);
-    }
-    return undefined;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready]);
+  }, [gen, ready]);
 
   const skip = useCallback(() => {
-    setIndex((i) => {
-      const next = i < last ? i + 1 : i === last && readyRef.current ? last + 1 : i;
-      indexRef.current = next;
-      return next;
-    });
-  }, [last]);
+    const i = indexRef.current;
+    const next = i < last ? i + 1 : i === last && readyRef.current ? last + 1 : i;
+    if (next === i) return; // already at the end of what skip can do right now
+    setIndex(next);
+    setGen((g) => g + 1); // forces the effect above to clear the pending timer and restart from `next`
+  }, [last, setIndex]);
 
   return { index: Math.min(index, last), done: index > last, skip };
 }

@@ -39,4 +39,35 @@ describe('useRitual', () => {
     act(() => { vi.advanceTimersByTime(2500); });
     expect(result.current.done).toBe(true);
   });
+
+  it('skip cancels the stale timer instead of leaving it to fire later', () => {
+    const { result } = renderHook(() => useRitual(durations, false));
+    act(() => { result.current.skip(); });
+    act(() => { result.current.skip(); });
+    expect(result.current.index).toBe(2);
+    // The original step-0 timer (due at 1000ms) must not still be pending after two skips.
+    act(() => { vi.advanceTimersByTime(1000); });
+    expect(result.current.index).toBe(2);
+  });
+
+  it('skip restarts the next step\'s timer from the moment of the skip', () => {
+    const { result } = renderHook(() => useRitual(durations, false));
+    act(() => { vi.advanceTimersByTime(500); });
+    act(() => { result.current.skip(); });
+    expect(result.current.index).toBe(1);
+    act(() => { vi.advanceTimersByTime(999); });
+    expect(result.current.index).toBe(1);
+    act(() => { vi.advanceTimersByTime(1); });
+    expect(result.current.index).toBe(2);
+  });
+
+  it('stays done after skipping through to the end, even if timers keep advancing', () => {
+    const { result } = renderHook(() => useRitual(durations, true));
+    act(() => { result.current.skip(); });
+    act(() => { result.current.skip(); });
+    act(() => { result.current.skip(); });
+    expect(result.current.done).toBe(true);
+    act(() => { vi.advanceTimersByTime(10_000); });
+    expect(result.current.done).toBe(true);
+  });
 });
