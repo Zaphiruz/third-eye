@@ -78,6 +78,25 @@ describe('today', () => {
     expect((await service().today('west')).fortune.date).toBe('2026-09-26');
   });
 
+  it('switching time zones never yields an extra fortune on the same real day', async () => {
+    now = new Date('2026-09-26T20:00:00Z');
+    await makeUser('traveller', { timeZone: 'America/Los_Angeles' });
+    const home = await service().today('traveller');                     // LA: 2026-09-26
+    await settle();
+    await prisma.user.update({ where: { sub: 'traveller' }, data: { timeZone: 'Pacific/Kiritimati' } });
+    const ahead = await service().today('traveller');                    // Kiritimati: 2026-09-27 → new, one day early
+    await settle();
+    expect(ahead.fortune.date).toBe('2026-09-27');
+    expect(ahead.fortune.id).not.toBe(home.fortune.id);
+    await prisma.user.update({ where: { sub: 'traveller' }, data: { timeZone: 'America/Los_Angeles' } });
+    const back = await service().today('traveller');                     // LA again: newest (09-27) is ≥ today → same one
+    expect(back.fresh).toBe(false);
+    expect(back.fortune.id).toBe(ahead.fortune.id);
+    now = new Date('2026-09-27T20:00:00Z');                              // next real day in LA: 09-27 → still that one
+    expect((await service().today('traveller')).fortune.id).toBe(ahead.fortune.id);
+    expect(await prisma.fortune.count()).toBe(2);
+  });
+
   it('two simultaneous requests create exactly one fortune and one oracle call', async () => {
     await makeUser('u1');
     const release = fake.hold();

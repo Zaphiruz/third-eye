@@ -49,7 +49,11 @@ export function createFortuneService(deps: FortuneServiceDeps): FortuneService {
       const date = localDate(deps.now(), user.timeZone);
       const key = { userSub_date: { userSub, date: toDbDate(date) } };
 
-      const existing = await prisma.fortune.findUnique({ where: key });
+      // The newest fortune wins if it is dated today or later, so switching time zones can move a
+      // fortune a day early but never produce an extra one.
+      const existing = await prisma.fortune.findFirst({
+        where: { userSub, date: { gte: toDbDate(date) } }, orderBy: { date: 'desc' },
+      });
       if (existing) return { fortune: await resume(existing.id), fresh: false };
 
       const profile = { birthDate: fromDbDate(user.birthDate), fullName: user.fullName, bloodType: user.bloodType };
