@@ -63,7 +63,7 @@ APP_TOKEN=$(printf '%s\n%s\n' "$VAULT_ROOT_TOKEN" "$KV_JSON" | ssh -o BatchMode=
   set -euo pipefail
   export VAULT_ADDR=http://127.0.0.1:8200
   read -r VAULT_TOKEN; export VAULT_TOKEN
-  umask 077; tmp=$(mktemp -p /dev/shm third-eye.XXXXXX); trap 'rm -f "$tmp"' EXIT HUP INT TERM
+  umask 077; tmp=$(mktemp -p /dev/shm third-eye.XXXXXX); trap "rm -f \"\$tmp\"" EXIT HUP INT TERM
   cat > "$tmp"
   vault token lookup >/dev/null || { echo "Vault rejected the root token" >&2; exit 1; }
   printf "path \"secret/data/third-eye\" { capabilities = [\"read\"] }\n" | vault policy write third-eye - >&2
