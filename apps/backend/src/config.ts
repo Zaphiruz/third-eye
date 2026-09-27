@@ -3,9 +3,25 @@ export interface AppConfig {
   sessionSecret: string; cookieSecure: boolean; adminGroup: string; devBypass: boolean;
   trustProxyHops: number;
   oidc: { issuer: string; clientId: string; clientSecret: string; redirectUri: string };
-  anthropic: { apiKey: string; model: string };
+  anthropic: AnthropicSettings;
+}
+
+export const THINKING_MODES = ['off', 'adaptive'] as const;
+export const EFFORT_LEVELS = ['low', 'medium', 'high'] as const;
+export interface AnthropicSettings {
+  apiKey: string;
+  model: string;
+  /** 'off' (default) is faster and cheaper; 'adaptive' lets the model think before writing. */
+  thinking: (typeof THINKING_MODES)[number];
+  effort: (typeof EFFORT_LEVELS)[number];
 }
 type Env = Record<string, string | undefined>;
+
+function oneOf<T extends string>(name: string, allowed: readonly T[], raw: string | undefined, fallback: T): T {
+  if (raw === undefined || raw === '') return fallback;
+  if (!(allowed as readonly string[]).includes(raw)) throw new Error(`${name} must be one of: ${allowed.join(', ')}`);
+  return raw as T;
+}
 
 /** Proxy hops that may set X-Forwarded-For. Defaults to 0 (trust nothing) so misconfiguration fails closed. */
 function trustProxyHops(raw: string | undefined): number {
@@ -39,6 +55,11 @@ export function loadConfig(env: Env = process.env): AppConfig {
       clientSecret: required('AUTHENTIK_CLIENT_SECRET'), redirectUri: required('AUTHENTIK_REDIRECT_URI'),
     },
     // The oracle is the product: no key, no start.
-    anthropic: { apiKey: required('ANTHROPIC_API_KEY'), model: env['ANTHROPIC_MODEL'] || 'claude-sonnet-5' },
+    anthropic: {
+      apiKey: required('ANTHROPIC_API_KEY'),
+      model: env['ANTHROPIC_MODEL'] || 'claude-sonnet-5',
+      thinking: oneOf('ANTHROPIC_THINKING', THINKING_MODES, env['ANTHROPIC_THINKING'], 'off'),
+      effort: oneOf('ANTHROPIC_EFFORT', EFFORT_LEVELS, env['ANTHROPIC_EFFORT'], 'medium'),
+    },
   };
 }

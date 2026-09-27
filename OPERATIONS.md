@@ -152,6 +152,13 @@ docker exec shared-infra-postgresql-1 psql -U postgres -d third_eye -c \
 **Change the model:** `vault kv patch secret/third-eye ANTHROPIC_MODEL=<model id>` on LC3, then
 `docker compose -f docker-compose.prod.yml restart backend`. New fortunes record the model used.
 
+**Tune reading quality vs. speed/cost:** `ANTHROPIC_THINKING` is `off` by default (fastest, cheapest); set it to
+`adaptive` to let the model think before writing (richer readings, slower, costs more). `ANTHROPIC_EFFORT` is
+`low`, `medium` (default) or `high`. Change either with `vault kv patch secret/third-eye ANTHROPIC_THINKING=adaptive`
+(or `ANTHROPIC_EFFORT=…`) on LC3, then restart the backend. An invalid value stops the backend at startup with a
+clear error. If readings start timing out (`oracle attempt failed` with a timeout in the logs), lower effort or turn
+thinking off.
+
 **Rotate a secret (incl. the Anthropic key):** `vault kv patch secret/third-eye KEY=value` on LC3, then restart the backend.
 
 **Costs:** one Claude call per user per day (plus at most one retry). Check usage in the Anthropic console.

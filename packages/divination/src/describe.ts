@@ -50,7 +50,7 @@ export function describeResult(r: MethodResult): ResultDescription {
       const a = getChineseAnimal(r.data.animal);
       const e = getChineseElement(r.data.element);
       return { method: r.method, title, facts: [
-        `${e.name} ${a.name} (${r.data.polarity}), lunar year ${r.data.lunarYear} — ${a.name}: ${list(a.traits)}; ${e.name}: ${list(e.traits)}`,
+        `${e.name} ${a.name} (${r.data.polarity}) — ${a.name}: ${list(a.traits)}; ${e.name}: ${list(e.traits)}`,
       ] };
     }
     case 'NUMEROLOGY': {

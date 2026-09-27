@@ -18,7 +18,7 @@ const app = await buildApp({
   adminGroup: config.adminGroup,
   devBypass: config.devBypass,
   oidcClient: createOidcClient(config.oidc),
-  oracleClient: createAnthropicOracleClient({ apiKey: config.anthropic.apiKey, model: config.anthropic.model }),
+  oracleClient: createAnthropicOracleClient(config.anthropic),
 });
 
 for (const sig of ['SIGINT', 'SIGTERM'] as const) {
@@ -28,4 +28,4 @@ for (const sig of ['SIGINT', 'SIGTERM'] as const) {
 }
 
 await app.listen({ host: '0.0.0.0', port: config.port });
-app.log.info({ model: config.anthropic.model, devBypass: config.devBypass }, 'third-eye backend ready');
+app.log.info({ model: config.anthropic.model, thinking: config.anthropic.thinking, effort: config.anthropic.effort, devBypass: config.devBypass }, 'third-eye backend ready');

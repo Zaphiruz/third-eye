@@ -51,6 +51,8 @@ print(json.dumps({
   "AUTHENTIK_ADMIN_GROUP": "third-eye-admins",
   "ANTHROPIC_API_KEY": os.environ["ANTHROPIC_KEY"],
   "ANTHROPIC_MODEL": "claude-sonnet-5",
+  "ANTHROPIC_THINKING": "off",
+  "ANTHROPIC_EFFORT": "medium",
 }))
 PY
 )

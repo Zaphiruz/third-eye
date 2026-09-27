@@ -23,6 +23,7 @@ describe('buildPrompt', () => {
   it('never leaks the birth date or the full name', () => {
     expect(req.user + req.system).not.toContain('1990-06-15');
     expect(req.user + req.system).not.toContain('Lovelace');
+    expect(req.user + req.system).not.toContain('1990');
   });
   it('addresses an unnamed seeker neutrally', () => {
     expect(buildPrompt({ persona: 'MYSTIC', date: '2026-09-26', firstName: null, results }).user).toContain('Seeker: (name not given)');

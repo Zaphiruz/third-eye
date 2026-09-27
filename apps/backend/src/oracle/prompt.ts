@@ -5,7 +5,7 @@ import { PERSONA_PROMPTS } from './personas.js';
 import type { OracleRequest } from './types.js';
 
 /** Bump whenever the system prompt, user template or schema changes; stored on each fortune. */
-export const PROMPT_VERSION = '2026-09-26.1';
+export const PROMPT_VERSION = '2026-09-27.1';
 
 export interface PromptInput { persona: PersonaId; date: string; firstName: string | null; results: MethodResult[] }
 export interface OracleOutput { summary: string; readings: Partial<Record<Method, string>> }

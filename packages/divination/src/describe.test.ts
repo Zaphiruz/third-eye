@@ -24,7 +24,7 @@ describe('describeResult', () => {
     expect(describeResult({ method: 'WESTERN', data: { sign: 'gemini' } }).facts[0])
       .toBe('Sun sign Gemini ♊ — Air, Mutable, ruled by Mercury — curious, adaptable, restless');
     expect(describeResult({ method: 'CHINESE', data: { animal: 'horse', element: 'metal', polarity: 'yang', lunarYear: 1990 } }).facts[0])
-      .toBe('Metal Horse (yang), lunar year 1990 — Horse: free-spirited, energetic, impatient; Metal: determination, discipline, clarity');
+      .toBe('Metal Horse (yang) — Horse: free-spirited, energetic, impatient; Metal: determination, discipline, clarity');
     expect(describeResult({ method: 'NUMEROLOGY', data: { lifePath: 11, expression: null } }).facts)
       .toEqual(['Life Path 11 (master number): The Intuitive — insight, inspiration, sensitivity']);
     expect(describeResult({ method: 'BLOODTYPE', data: { type: 'AB' } }).facts[0])

@@ -195,6 +195,8 @@ The frontend renders result `data` using reference data it imports from `divinat
 
 > **Amendment (implementation planning, 2026-09-26):** instead of a forced tool call, use Claude **structured outputs** — `output_config: { format: { type: 'json_schema', schema } }` on `messages.create` (current API; forced `tool_choice` is rejected on newer models). The schema is built per fortune from the methods present; the text block is `JSON.parse`d and re-validated with zod. A `refusal` or `max_tokens` stop reason counts as a failed attempt. SDK retries are disabled (`maxRetries: 0`) so the oracle's own "retry once" rule is the only retry.
 
+> **Amendment (2026-09-27):** thinking is **off by default** (`ANTHROPIC_THINKING=off|adaptive`) and effort is configurable (`ANTHROPIC_EFFORT=low|medium|high`, default `medium`), both via Vault. The Chinese-zodiac fact no longer includes the lunar year, so the birth year never reaches the model (`PROMPT_VERSION 2026-09-27.1`).
+
 Personas live in `oracle/personas.ts` as `{ id, name, tagline, sampleLine, systemPrompt }`; `name`, `tagline`, and `sampleLine` are also exported to the frontend via `shared` for onboarding.
 
 ## 7. Frontend
