@@ -11,3 +11,5 @@ export * from './data/blood-types.js';
 export * from './bloodtype.js';
 export * from './data/tarot.js';
 export * from './tarot.js';
+export * from './data/runes.js';
+export * from './runes.js';
