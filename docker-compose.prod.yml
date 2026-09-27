@@ -1,0 +1,31 @@
+x-logging: &default-logging
+  driver: json-file
+  options: { max-size: "10m", max-file: "3" }
+
+services:
+  backend:
+    build: { context: ., dockerfile: apps/backend/Dockerfile }
+    image: third-eye-backend:latest
+    restart: unless-stopped
+    env_file: .env            # VAULT_ADDR + VAULT_TOKEN only; everything else comes from Vault at start
+    environment:
+      TZ: America/New_York
+      NODE_EXTRA_CA_CERTS: /etc/ssl/extra/cloudflare-ca.crt
+    volumes:
+      - /usr/local/share/ca-certificates/cloudflare-origin-ca.crt:/etc/ssl/extra/cloudflare-ca.crt:ro
+    networks: [default, shared-db]
+    logging: *default-logging
+
+  frontend:
+    build: { context: ., dockerfile: apps/frontend/Dockerfile }
+    image: third-eye-frontend:latest
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports: ["192.168.40.20:3009:80"]   # LAN address only; nginx on LC2 is the only intended client
+    logging: *default-logging
+
+networks:
+  shared-db:
+    external: true
