@@ -26,6 +26,9 @@ jobs:
       - uses: actions/setup-node@v7
         with: { node-version: 20, cache: pnpm }
       - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @third-eye/backend exec prisma generate
+      - run: pnpm --filter @third-eye/backend exec prisma migrate deploy
+        env: { DATABASE_URL: "postgres://third_eye:third_eye@localhost:5435/third_eye_test" }
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test

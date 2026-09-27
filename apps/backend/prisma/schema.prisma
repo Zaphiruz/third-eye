@@ -1,0 +1,104 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Persona {
+  MYSTIC
+  CONFIDANT
+  TRICKSTER
+}
+
+enum BloodType {
+  A
+  B
+  AB
+  O
+}
+
+enum FortuneStatus {
+  PENDING
+  READY
+  FAILED
+}
+
+enum Method {
+  TAROT
+  RUNE
+  ICHING
+  WESTERN
+  CHINESE
+  NUMEROLOGY
+  BLOODTYPE
+}
+
+model User {
+  sub         String     @id
+  name        String
+  email       String
+  birthDate   DateTime?  @map("birth_date") @db.Date
+  fullName    String?    @map("full_name")
+  bloodType   BloodType? @map("blood_type")
+  timeZone    String     @default("UTC") @map("time_zone")
+  persona     Persona    @default(CONFIDANT)
+  lastLoginAt DateTime   @map("last_login_at") @db.Timestamptz(6)
+  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  sessions Session[]
+  fortunes Fortune[]
+
+  @@map("users")
+}
+
+model Session {
+  idHash    String   @id @map("id_hash")
+  userSub   String   @map("user_sub")
+  data      Json
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  user      User     @relation(fields: [userSub], references: [sub], onDelete: Cascade)
+
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+model Fortune {
+  id              String        @id @default(uuid()) @db.Uuid
+  userSub         String        @map("user_sub")
+  date            DateTime      @db.Date
+  status          FortuneStatus @default(PENDING)
+  persona         Persona
+  profileSnapshot Json          @map("profile_snapshot")
+  summary         String?
+  model           String?
+  promptVersion   String?       @map("prompt_version")
+  attempts        Int           @default(0)
+  lastError       String?       @map("last_error")
+  startedAt       DateTime      @default(now()) @map("started_at") @db.Timestamptz(6)
+  completedAt     DateTime?     @map("completed_at") @db.Timestamptz(6)
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user    User            @relation(fields: [userSub], references: [sub], onDelete: Cascade)
+  results FortuneResult[]
+
+  // Also serves history (userSub = ? ORDER BY date DESC) via a backward index scan.
+  @@unique([userSub, date])
+  @@map("fortunes")
+}
+
+model FortuneResult {
+  id        String  @id @default(uuid()) @db.Uuid
+  fortuneId String  @map("fortune_id") @db.Uuid
+  method    Method
+  data      Json
+  reading   String?
+  fortune   Fortune @relation(fields: [fortuneId], references: [id], onDelete: Cascade)
+
+  @@unique([fortuneId, method])
+  @@map("fortune_results")
+}

@@ -1,0 +1,76 @@
+import Fastify, { type FastifyError, type FastifyInstance, type FastifyServerOptions } from 'fastify';
+import cookie from '@fastify/cookie';
+import rateLimit from '@fastify/rate-limit';
+import type { PrismaClient } from '@prisma/client';
+import { AppError } from './errors.js';
+
+export interface BuildAppOptions {
+  logger?: FastifyServerOptions['logger'];
+  prisma: PrismaClient;
+  frontendOrigin: string;
+  sessionSecret: string;
+  cookieSecure: boolean;
+  disableRateLimit?: boolean;
+  rateLimitMax?: number;
+  /** Proxy hops to trust for req.ip / X-Forwarded-For. 0 (default) trusts none. */
+  trustProxyHops?: number;
+}
+
+const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+
+export async function buildApp(options: BuildAppOptions): Promise<FastifyInstance> {
+  // Fastify's numeric trustProxy is a no-op; the hop-count predicate is what proxy-addr honours.
+  const trustProxyHops = options.trustProxyHops ?? 0;
+  const app = Fastify({
+    logger: options.logger ?? false,
+    trustProxy: (_addr: string, hop: number) => hop < trustProxyHops,
+  });
+
+  await app.register(cookie, { secret: options.sessionSecret });
+
+  if (!options.disableRateLimit) {
+    await app.register(rateLimit, {
+      global: true,
+      max: options.rateLimitMax ?? 600,
+      timeWindow: '1 minute',
+      allowList: (req) => req.url === '/health',
+      keyGenerator: (req) => `ip:${req.ip}`,
+    });
+  }
+
+  app.addHook('onRequest', async (req) => {
+    if (SAFE_METHODS.has(req.method)) return;
+    if (req.headers.origin !== options.frontendOrigin) throw new AppError(403, 'forbidden', 'Bad origin');
+  });
+
+  app.setErrorHandler((err: FastifyError | AppError, req, reply) => {
+    if (err instanceof AppError) {
+      return reply.code(err.status).send({
+        error: { code: err.code, message: err.message, ...(err.details !== undefined ? { details: err.details } : {}) },
+      });
+    }
+    const status = (err as FastifyError).statusCode;
+    if (status === 429) return reply.code(429).send({ error: { code: 'rate_limited', message: 'Too many requests' } });
+    if (status && status >= 400 && status < 500) {
+      return reply.code(status).send({ error: { code: 'validation_error', message: err.message } });
+    }
+    req.log.error({ err }, 'unhandled error');
+    return reply.code(500).send({ error: { code: 'internal', message: 'Internal error' } });
+  });
+  app.setNotFoundHandler((_req, reply) =>
+    reply.code(404).send({ error: { code: 'not_found', message: 'Not found' } }),
+  );
+
+  app.get('/health', async () => ({ status: 'ok' }));
+  app.get('/api/ready', async (req, reply) => {
+    try {
+      await options.prisma.$queryRaw`SELECT 1`;
+      return { status: 'ok' };
+    } catch (err) {
+      req.log.error({ err }, 'readiness probe failed');
+      return reply.code(503).send({ status: 'degraded' });
+    }
+  });
+
+  return app;
+}
