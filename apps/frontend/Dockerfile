@@ -1,5 +1,7 @@
 FROM node:20-alpine AS base
 RUN corepack enable
+# corepack otherwise waits for confirmation and the non-interactive build hangs
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 WORKDIR /repo
 
 FROM base AS deps
