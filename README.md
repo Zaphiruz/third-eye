@@ -4,6 +4,8 @@ A daily fortune, woven from many traditions. Each day Third Eye draws a three-ca
 
 Live (family & friends, Authentik sign-in): https://third-eye.wispy-nook.casa. Readings are written by Claude Haiku 4.5 by default; see `OPERATIONS.md` to change the model.
 
+Any finished reading can be shared with people who don't have an account: **Share** creates a read-only link (optionally without your birth-based signs) that you can stop sharing at any time.
+
 - `packages/divination` — pure TypeScript: every draw and calculation, plus the reference data (78 cards, 24 runes, 64 hexagrams, zodiac, Lunar New Year 1900–2100).
 - `apps/backend` — Fastify + Prisma API, Authentik OIDC, the Claude-backed oracle.
 - `apps/frontend` — React PWA with the ritual animation.

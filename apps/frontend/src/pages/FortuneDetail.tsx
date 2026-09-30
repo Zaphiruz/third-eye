@@ -1,6 +1,7 @@
 import { Link, useParams } from 'react-router-dom';
 import { useGetFortuneQuery } from '../api';
 import { FortuneView } from '@third-eye/ui';
+import { ShareButton } from '../components/ShareDialog';
 import { Screen } from '../components/Screen';
 
 export function FortuneDetail() {
@@ -15,6 +16,7 @@ export function FortuneDetail() {
         {new Date(`${data.date}T12:00:00Z`).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}
       </h1>
       <FortuneView fortune={data} />
+      {data.status === 'READY' && <ShareButton fortuneId={data.id} />}
     </div>
   );
 }

@@ -143,6 +143,14 @@ raise it to 6–12 months once nothing breaks.
 
 ## Day-2 operations
 
+**Share links:** users create and revoke them in the app (Share → Stop sharing). Public pages live at `/s/<token>`,
+are rendered by the backend (Caddy routes `/s/*` to it), never cached (`no-store`) and not indexed (`noindex`).
+To list active links:
+```bash
+docker exec shared-infra-postgresql-1 psql -U postgres -d third_eye -c   "SELECT s.created_at, s.user_sub, s.shared_by_name, s.include_birth_signs, f.date FROM shares s JOIN fortunes f ON f.id = s.fortune_id WHERE s.revoked_at IS NULL ORDER BY s.created_at DESC;"
+```
+To revoke one by hand: `UPDATE shares SET revoked_at = now() WHERE token = '<token>';`
+
 **Logs:** `docker compose -f docker-compose.prod.yml logs -f backend` (look for `oracle attempt failed`).
 
 **A fortune stuck or failed:** a `FAILED` fortune, or one `PENDING` for more than two minutes, is retried with the

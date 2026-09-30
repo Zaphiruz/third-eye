@@ -4,6 +4,7 @@ import { skipToken } from '@reduxjs/toolkit/query';
 import type { TodayDto } from '@third-eye/shared';
 import { api, apiErrorCode, useGetFortuneQuery, useOpenTodayMutation } from '../api';
 import { FortuneView } from '@third-eye/ui';
+import { ShareButton } from '../components/ShareDialog';
 import { Screen } from '../components/Screen';
 import { Ritual } from '../ritual/Ritual';
 
@@ -70,7 +71,10 @@ export function Today() {
       {fortune.status === 'PENDING' && <p className="text-center font-display text-2xl text-gold-soft">The oracle is still speaking…</p>}
       <FortuneView fortune={fortune} />
       {fortune.status === 'READY' && (
-        <button className="btn-ghost mx-auto" onClick={() => setRitual(true)}>Replay the ritual</button>
+        <div className="flex flex-wrap justify-center gap-3">
+          <ShareButton fortuneId={fortune.id} />
+          <button className="btn-ghost" onClick={() => setRitual(true)}>Replay the ritual</button>
+        </div>
       )}
     </div>
   );
