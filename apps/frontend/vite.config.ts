@@ -21,5 +21,5 @@ export default defineConfig({
       devOptions: { enabled: false, type: 'module' },
     }),
   ],
-  server: { port: 5174, strictPort: true, proxy: { '/api': { target: 'http://127.0.0.1:3001', changeOrigin: false } } },
+  server: { port: 5174, strictPort: true, proxy: { '/api': { target: 'http://127.0.0.1:3001', changeOrigin: false }, '/s': { target: 'http://127.0.0.1:3001', changeOrigin: false } } },
 });

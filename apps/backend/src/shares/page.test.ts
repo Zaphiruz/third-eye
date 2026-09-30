@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createTestApp, type TestCtx } from '../test/helpers/test-app.js';
 import { resetDatabase, seedFortune } from '../test/helpers/db.js';
 
@@ -30,6 +30,7 @@ describe('public share page', () => {
     expect(r.headers['content-security-policy']).toBe(
       "default-src 'none'; style-src 'unsafe-inline'; font-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
     );
+    expect(r.headers['x-content-type-options']).toBe('nosniff');
     expect(r.body.startsWith('<!doctype html>')).toBe(true);
     expect(r.body).toContain('Shared by Ada');
     expect(r.body).toContain('Tuesday, September 29');
@@ -77,6 +78,9 @@ describe('public share page', () => {
       const r = await page(t);
       expect(r.statusCode).toBe(404);
       expect(r.headers['cache-control']).toBe('no-store');
+      expect(r.headers['content-security-policy']).toContain("default-src 'none'");
+      expect(r.headers['x-robots-tag']).toBe('noindex');
+      expect(r.headers['content-type']).toBe('text/html; charset=utf-8');
       expect(r.body).toContain('This link is no longer active');
       expect(r.body).not.toMatch(/<script/i);
     }
@@ -98,5 +102,30 @@ describe('public share page', () => {
     expect(f.headers['cache-control']).toBe('public, max-age=31536000, immutable');
     expect(f.rawPayload.length).toBeGreaterThan(1000);
     expect((await ctx.app.inject({ method: 'GET', url: '/s/assets/..%2F..%2Fpackage.json' })).statusCode).toBe(404);
+  });
+
+  it('rejects inherited object keys as font names', async () => {
+    for (const n of ['constructor', '__proto__', 'toString']) {
+      expect((await ctx.app.inject({ method: 'GET', url: `/s/assets/${n}` })).statusCode).toBe(404);
+    }
+  });
+
+  it('serves the HTML 404 with share headers for nested /s/ paths', async () => {
+    const r = await ctx.app.inject({ method: 'GET', url: '/s/a/b' });
+    expect(r.statusCode).toBe(404);
+    expect(r.headers['content-type']).toBe('text/html; charset=utf-8');
+    expect(r.headers['content-security-policy']).toContain("default-src 'none'");
+    expect(r.body).toContain('This link is no longer active');
+  });
+
+  it('serves an HTML 500 when the lookup fails', async () => {
+    const spy = vi.spyOn(ctx.prisma.share, 'findUnique').mockRejectedValueOnce(new Error('db down'));
+    const r = await page('C'.repeat(22));
+    spy.mockRestore();
+    expect(r.statusCode).toBe(500);
+    expect(r.headers['cache-control']).toBe('no-store');
+    expect(r.headers['content-type']).toBe('text/html; charset=utf-8');
+    expect(r.body).toContain('The oracle is resting');
+    expect(r.body.startsWith('<!doctype html>')).toBe(true);
   });
 });
