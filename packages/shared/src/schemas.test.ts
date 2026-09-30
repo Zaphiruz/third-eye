@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isValidTimeZone, profileUpdateSchema } from './schemas.js';
+import { isValidTimeZone, profileUpdateSchema, shareCreateSchema } from './schemas.js';
 
 const ok = (v: unknown) => profileUpdateSchema.safeParse(v).success;
 
@@ -34,5 +34,18 @@ describe('isValidTimeZone', () => {
   it('knows real IANA zones', () => {
     expect(isValidTimeZone('Europe/London')).toBe(true);
     expect(isValidTimeZone('Not/AZone')).toBe(false);
+  });
+});
+
+describe('shareCreateSchema', () => {
+  it('trims the name and requires a boolean', () => {
+    expect(shareCreateSchema.parse({ sharedByName: '  Ada  ', includeBirthSigns: false })).toEqual({ sharedByName: 'Ada', includeBirthSigns: false });
+  });
+  it('rejects empty/overlong names, missing flags and unknown keys', () => {
+    const bad = (v: unknown) => shareCreateSchema.safeParse(v).success;
+    expect(bad({ sharedByName: '   ', includeBirthSigns: true })).toBe(false);
+    expect(bad({ sharedByName: 'x'.repeat(61), includeBirthSigns: true })).toBe(false);
+    expect(bad({ sharedByName: 'Ada' })).toBe(false);
+    expect(bad({ sharedByName: 'Ada', includeBirthSigns: true, extra: 1 })).toBe(false);
   });
 });

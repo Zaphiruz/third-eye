@@ -42,3 +42,11 @@ export interface FortuneSummaryDto {
 export interface FortunePageDto { items: FortuneSummaryDto[]; nextCursor: string | null }
 
 export interface ApiErrorBody { error: { code: string; message: string; details?: unknown } }
+
+export interface ShareDto {
+  id: string;
+  url: string;               // `${FRONTEND_ORIGIN}/s/${token}`
+  sharedByName: string;
+  includeBirthSigns: boolean;
+  createdAt: string;         // ISO timestamp
+}

@@ -1,5 +1,7 @@
+import type { Method } from '@third-eye/divination';
+
 export const ERROR_CODES = [
-  'validation_error', 'unauthorized', 'forbidden', 'not_found', 'needs_onboarding', 'rate_limited', 'internal',
+  'validation_error', 'unauthorized', 'forbidden', 'not_found', 'needs_onboarding', 'not_ready', 'rate_limited', 'internal',
 ] as const;
 export type ErrorCode = (typeof ERROR_CODES)[number];
 
@@ -27,3 +29,6 @@ export const PERSONAS: Record<PersonaId, { name: string; tagline: string; sample
 };
 
 export const HISTORY_PAGE_SIZE = 20;
+
+/** Hidden on a share link unless the owner opts in. */
+export const BIRTH_SIGN_METHODS: readonly Method[] = ['WESTERN', 'CHINESE', 'NUMEROLOGY', 'BLOODTYPE'];

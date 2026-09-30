@@ -10,6 +10,7 @@ export function getTestPrisma(): PrismaClient {
 
 export async function resetDatabase(): Promise<void> {
   const p = getTestPrisma();
+  await p.share.deleteMany();
   await p.fortuneResult.deleteMany();
   await p.fortune.deleteMany();
   await p.session.deleteMany();

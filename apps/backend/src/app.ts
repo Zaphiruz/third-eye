@@ -15,6 +15,8 @@ import { createOracle } from './oracle/interpret.js';
 import type { OracleClient } from './oracle/types.js';
 import { createFortuneService } from './fortunes/service.js';
 import { registerFortuneRoutes } from './fortunes/routes.js';
+import { createShareService } from './shares/service.js';
+import { registerShareRoutes } from './shares/routes.js';
 
 export interface BuildAppOptions {
   logger?: FastifyServerOptions['logger'];
@@ -118,6 +120,8 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     ...(options.onInterpret ? { onInterpret: options.onInterpret } : {}),
   });
   registerFortuneRoutes(app, { fortunes });
+  const shares = createShareService({ prisma: options.prisma, frontendOrigin: options.frontendOrigin });
+  registerShareRoutes(app, { shares });
 
   return app;
 }

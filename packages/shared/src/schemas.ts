@@ -32,3 +32,9 @@ export const profileUpdateSchema = z.object({
 }).partial().strict().refine((o) => Object.keys(o).length > 0, 'Nothing to update');
 
 export type ProfileUpdateInput = z.infer<typeof profileUpdateSchema>;
+
+export const shareCreateSchema = z.object({
+  sharedByName: z.string().trim().min(1, 'Enter a name').max(60),
+  includeBirthSigns: z.boolean(),
+}).strict();
+export type ShareCreateInput = z.infer<typeof shareCreateSchema>;
