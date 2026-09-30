@@ -75,7 +75,7 @@ export const shareCreateSchema; // zod: { sharedByName, includeBirthSigns }
   - All user-controlled text (name, summary, readings) is escaped by React; nothing uses `dangerouslySetInnerHTML` except the inlined build-time CSS.
 - Response headers: `Content-Type: text/html; charset=utf-8`, `Cache-Control: no-store`, `X-Robots-Tag: noindex`, `Referrer-Policy: no-referrer`, `X-Content-Type-Options: nosniff`, `Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; font-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'; frame-ancestors 'none'`.
 - Rate limit: 60/min per IP.
-- Fonts: Cormorant Garamond woff2 (400, 600) copied from `@fontsource` into the backend at build time and served at `/s/assets/<file>` with `Cache-Control: public, max-age=31536000, immutable`.
+- Fonts: Cormorant Garamond woff2 (400, 600) resolved from `@fontsource/cormorant-garamond` in the backend's `node_modules` at runtime and served at `/s/assets/<file>` with `Cache-Control: public, max-age=31536000, immutable`.
 - Styles: a Tailwind build (same theme as the app, content = `packages/ui/src/**` + the page template) produces `share.css` at backend build time; the page inlines it in a `<style>` tag.
 
 ## 6. Shared UI Package

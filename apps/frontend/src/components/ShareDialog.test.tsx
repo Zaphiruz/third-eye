@@ -27,8 +27,9 @@ describe('ShareButton', () => {
     await waitFor(() => expect(within(dialog).getByLabelText('Shared by')).toHaveValue('Ada Lovelace'));
     expect(within(dialog).getByLabelText(/include birth-based signs/i)).not.toBeChecked();
     await userEvent.click(within(dialog).getByRole('button', { name: 'Create link' }));
-    // The new link shows under the button and again in the refreshed "Active links" list.
-    expect((await within(dialog).findAllByDisplayValue('https://third-eye.example/s/AAAAAAAAAAAAAAAAAAAAAA')).length).toBeGreaterThan(0);
+    // The new link shows once: the top row is hidden as soon as the refreshed "Active links" list contains it.
+    await within(dialog).findByText(/Ada Lovelace · without signs/);
+    expect(within(dialog).getAllByDisplayValue('https://third-eye.example/s/AAAAAAAAAAAAAAAAAAAAAA')).toHaveLength(1);
     expect(calls.find((c) => c.method === 'POST')!.body).toEqual({ sharedByName: 'Ada Lovelace', includeBirthSigns: false });
   });
 
@@ -93,6 +94,7 @@ describe('ShareButton', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Share' }));
     const dialog = await screen.findByRole('dialog');
     const input = within(dialog).getByLabelText('Shared by');
+    await waitFor(() => expect(input).toHaveValue('Ada')); // /me must have loaded, or clear() is a no-op
     await userEvent.clear(input);
     await userEvent.click(within(dialog).getByRole('button', { name: 'Create link' }));
     expect(await within(dialog).findByText('Enter a name of 1–60 characters.')).toBeInTheDocument();

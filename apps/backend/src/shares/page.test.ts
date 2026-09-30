@@ -95,6 +95,19 @@ describe('public share page', () => {
     expect(r.body).toContain('This link is no longer active');
   });
 
+  it('serves the HTML 500 page when rendering throws', async () => {
+    const { f, token } = await share();
+    await ctx.prisma.fortuneResult.update({
+      where: { fortuneId_method: { fortuneId: f.id, method: 'TAROT' } },
+      data: { data: { cards: [{ id: 'not-a-card', reversed: false }] } },
+    });
+    const r = await page(token);
+    expect(r.statusCode).toBe(500);
+    expect(r.headers['cache-control']).toBe('no-store');
+    expect(r.headers['content-type']).toBe('text/html; charset=utf-8');
+    expect(r.body).toContain('Something went wrong on our side');
+  });
+
   it('serves the two fonts with immutable caching and nothing else', async () => {
     const f = await ctx.app.inject({ method: 'GET', url: '/s/assets/cormorant-400.woff2' });
     expect(f.statusCode).toBe(200);
@@ -126,6 +139,8 @@ describe('public share page', () => {
     expect(r.headers['cache-control']).toBe('no-store');
     expect(r.headers['content-type']).toBe('text/html; charset=utf-8');
     expect(r.body).toContain('The oracle is resting');
+    expect(r.body).toContain('Something went wrong on our side — please try again later.');
+    expect(r.body).not.toContain('�');
     expect(r.body.startsWith('<!doctype html>')).toBe(true);
   });
 });

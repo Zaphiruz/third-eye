@@ -29,15 +29,14 @@ export function registerPublicShareRoutes(app: FastifyInstance, deps: { shares: 
     { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } },
     async (req, reply) => {
       reply.headers(SHARE_PAGE_HEADERS).type('text/html; charset=utf-8');
-      let share;
       try {
-        share = await deps.shares.findPublic(req.params.token);
+        const share = await deps.shares.findPublic(req.params.token);
+        if (!share) return reply.code(404).send(renderNotFoundPage());
+        return reply.send(renderSharePage(share));
       } catch (err) {
         req.log.error(sanitizeErrorLog(err), 'share page failed');
         return reply.code(500).send(renderErrorPage());
       }
-      if (!share) return reply.code(404).send(renderNotFoundPage());
-      return reply.send(renderSharePage(share));
     });
 
   // Any other /s/* path (e.g. /s/a/b) gets the same HTML 404 rather than the JSON not-found envelope.

@@ -83,7 +83,7 @@ function ShareDialog({ fortuneId, onClose }: { fortuneId: string; onClose: () =>
         </label>
         {error && <p className="field-error" role="alert">{error}</p>}
         <button type="button" className="btn-gold" disabled={creating} onClick={() => void create()}>Create link</button>
-        {created && !revokedIds.includes(created.id) && <LinkRow url={created.url} />}
+        {created && !revokedIds.includes(created.id) && !shares.some((s) => s.id === created.id) && <LinkRow url={created.url} />}
         {shares.length > 0 && (
           <section className="grid gap-3">
             <h3 className="text-lg">Active links</h3>

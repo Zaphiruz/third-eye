@@ -6,7 +6,9 @@ export interface SerializableRequest { method: string; url: string; ip?: string 
 export function serializeRequest(req: SerializableRequest) {
   const url = req.url ?? '';
   const cut = url.search(/[?#]/);
-  return { method: req.method, url: cut === -1 ? url : url.slice(0, cut), remoteAddress: req.ip };
+  const path = cut === -1 ? url : url.slice(0, cut);
+  // /s/<token> is a bearer capability: never log it.
+  return { method: req.method, url: /^\/s\/[A-Za-z0-9_-]{22}$/.test(path) ? '/s/<redacted>' : path, remoteAddress: req.ip };
 }
 
 export const loggerOptions = {

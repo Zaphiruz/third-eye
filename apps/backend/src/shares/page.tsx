@@ -89,7 +89,7 @@ export function renderErrorPage(): string {
     <Page title="Third Eye">
       <section className="card mt-10 text-center">
         <h1 className="text-3xl">The oracle is resting</h1>
-        <p className="mt-3 text-mist/70">The oracle is resting — please try again later.</p>
+        <p className="mt-3 text-mist/70">Something went wrong on our side â€” please try again later.</p>
       </section>
     </Page>,
   );
