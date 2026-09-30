@@ -4,3 +4,4 @@ dev-dist
 .env
 *.tsbuildinfo
 vault-token
+apps/backend/src/shares/generated/

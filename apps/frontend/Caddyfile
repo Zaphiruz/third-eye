@@ -29,6 +29,11 @@
     reverse_proxy backend:3000
   }
 
+  # Public share pages are rendered by the backend and set their own (stricter) security headers.
+  handle /s/* {
+    reverse_proxy backend:3000
+  }
+
   # Hashed build output is immutable.
   handle /assets/* {
     root * /srv
