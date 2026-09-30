@@ -135,4 +135,17 @@ describe('ShareButton', () => {
     expect(await within(dialog).findByText('Could not stop sharing. Please try again.')).toBeInTheDocument();
     expect(within(dialog).getByText(/Dad · without signs/)).toBeInTheDocument();
   });
+
+  it('still shows the new link when the follow-up list fetch fails', async () => {
+    installMockApi({
+      'GET /me': ok(me()),
+      [`GET /fortunes/${FID}/shares`]: { status: 500, body: { error: { code: 'boom', message: 'x' } } },
+      [`POST /fortunes/${FID}/shares`]: () => ok(share(), 201),
+    });
+    renderApp(<ShareButton fortuneId={FID} />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Share' }));
+    const dialog = await screen.findByRole('dialog');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Create link' }));
+    expect(await within(dialog).findByDisplayValue('https://third-eye.example/s/AAAAAAAAAAAAAAAAAAAAAA')).toBeInTheDocument();
+  });
 });

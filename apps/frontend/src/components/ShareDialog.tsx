@@ -36,6 +36,7 @@ function ShareDialog({ fortuneId, onClose }: { fortuneId: string; onClose: () =>
   const [includeBirthSigns, setIncludeBirthSigns] = useState(false);
   const [created, setCreated] = useState<ShareDto | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [revokedIds, setRevokedIds] = useState<string[]>([]);
   const [revokeError, setRevokeError] = useState<string | null>(null);
   const nameRef = useRef<HTMLInputElement>(null);
   useEffect(() => { nameRef.current?.focus(); }, []);
@@ -55,6 +56,7 @@ function ShareDialog({ fortuneId, onClose }: { fortuneId: string; onClose: () =>
     setRevokeError(null);
     try {
       await revokeShare({ id, fortuneId }).unwrap();
+      setRevokedIds((ids) => [...ids, id]);
     } catch {
       setRevokeError('Could not stop sharing. Please try again.');
     }
@@ -81,7 +83,7 @@ function ShareDialog({ fortuneId, onClose }: { fortuneId: string; onClose: () =>
         </label>
         {error && <p className="field-error" role="alert">{error}</p>}
         <button type="button" className="btn-gold" disabled={creating} onClick={() => void create()}>Create link</button>
-        {created && shares.some((s) => s.id === created.id) && <LinkRow url={created.url} />}
+        {created && !revokedIds.includes(created.id) && <LinkRow url={created.url} />}
         {shares.length > 0 && (
           <section className="grid gap-3">
             <h3 className="text-lg">Active links</h3>
