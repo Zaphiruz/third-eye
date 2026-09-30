@@ -3,7 +3,7 @@ import { useDispatch } from 'react-redux';
 import { skipToken } from '@reduxjs/toolkit/query';
 import type { TodayDto } from '@third-eye/shared';
 import { api, apiErrorCode, useGetFortuneQuery, useOpenTodayMutation } from '../api';
-import { FortuneView } from '../components/FortuneView';
+import { FortuneView } from '@third-eye/ui';
 import { Screen } from '../components/Screen';
 import { Ritual } from '../ritual/Ritual';
 

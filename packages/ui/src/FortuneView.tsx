@@ -1,5 +1,5 @@
 import { PERSONAS, type FortuneDto } from '@third-eye/shared';
-import { MethodCard } from './MethodCard';
+import { MethodCard } from './MethodCard.js';
 
 export function FortuneView({ fortune }: { fortune: FortuneDto }) {
   return (

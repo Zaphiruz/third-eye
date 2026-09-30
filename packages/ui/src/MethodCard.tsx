@@ -1,9 +1,9 @@
 import { describeResult, getRune, getZodiacSign, type IChingData, type MethodResult, type RuneData, type TarotData, type WesternData } from '@third-eye/divination';
 import type { FortuneResultDto } from '@third-eye/shared';
-import { TarotCard } from './symbols/TarotCard';
-import { RuneStone } from './symbols/RuneStone';
-import { Hexagram } from './symbols/Hexagram';
-import { SignRing, signItems } from './symbols/SignRing';
+import { TarotCard } from './symbols/TarotCard.js';
+import { RuneStone } from './symbols/RuneStone.js';
+import { Hexagram } from './symbols/Hexagram.js';
+import { SignRing, signItems } from './symbols/SignRing.js';
 
 function MethodSymbol({ result }: { result: FortuneResultDto }) {
   switch (result.method) {

@@ -2,10 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { motion } from 'motion/react';
 import type { IChingData, RuneData, TarotData } from '@third-eye/divination';
 import type { FortuneDto } from '@third-eye/shared';
-import { TarotCard } from '../components/symbols/TarotCard';
-import { RuneStone } from '../components/symbols/RuneStone';
-import { Hexagram } from '../components/symbols/Hexagram';
-import { SignRing, signItems } from '../components/symbols/SignRing';
+import { Hexagram, RuneStone, SignRing, TarotCard, signItems } from '@third-eye/ui';
 
 export interface RitualStep { key: string; caption: string; duration: number; render: () => ReactNode }
 

@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import type { FortuneResultDto } from '@third-eye/shared';
-import { TarotCard } from './TarotCard';
-import { RuneStone } from './RuneStone';
-import { Hexagram } from './Hexagram';
-import { SignRing, signItems } from './SignRing';
+import { TarotCard } from './TarotCard.js';
+import { RuneStone } from './RuneStone.js';
+import { Hexagram } from './Hexagram.js';
+import { SignRing, signItems } from './SignRing.js';
 
 describe('symbols', () => {
   it('labels tarot cards by name and orientation', () => {

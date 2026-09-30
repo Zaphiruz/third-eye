@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useGetHistoryQuery } from '../api';
-import { MiniSymbols } from '../components/MethodCard';
+import { MiniSymbols } from '@third-eye/ui';
 import { Screen } from '../components/Screen';
 
 const fmt = (d: string) =>

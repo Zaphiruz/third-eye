@@ -1,6 +1,6 @@
 import { Link, useParams } from 'react-router-dom';
 import { useGetFortuneQuery } from '../api';
-import { FortuneView } from '../components/FortuneView';
+import { FortuneView } from '@third-eye/ui';
 import { Screen } from '../components/Screen';
 
 export function FortuneDetail() {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import type { FortuneDto } from '@third-eye/shared';
-import { FortuneView } from './FortuneView';
+import { FortuneView } from './FortuneView.js';
 
 const base: FortuneDto = {
   id: 'f1', date: '2026-09-26', status: 'READY', persona: 'MYSTIC', summary: 'The veil parts.',
