@@ -61,4 +61,78 @@ describe('ShareButton', () => {
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Create link' }));
     expect(await screen.findByText("This reading isn't finished yet.")).toBeInTheDocument();
   });
+
+  it('focuses the name input on open, closes on Escape and returns focus to the Share button', async () => {
+    installMockApi({ 'GET /me': ok(me()), [`GET /fortunes/${FID}/shares`]: ok([]) });
+    renderApp(<ShareButton fortuneId={FID} />);
+    const button = await screen.findByRole('button', { name: 'Share' });
+    await userEvent.click(button);
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByLabelText('Shared by')).toHaveFocus();
+    await userEvent.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(button).toHaveFocus();
+  });
+
+  it('does not close when the backdrop is clicked', async () => {
+    installMockApi({ 'GET /me': ok(me()), [`GET /fortunes/${FID}/shares`]: ok([]) });
+    renderApp(<ShareButton fortuneId={FID} />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Share' }));
+    const dialog = await screen.findByRole('dialog');
+    await userEvent.click(dialog.parentElement!);
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+  });
+
+  it('rejects an empty name and sends includeBirthSigns when checked', async () => {
+    const calls = installMockApi({
+      'GET /me': ok(me()),
+      [`GET /fortunes/${FID}/shares`]: ok([]),
+      [`POST /fortunes/${FID}/shares`]: ({ body }) => ok(share(body as Partial<ShareDto>), 201),
+    });
+    renderApp(<ShareButton fortuneId={FID} />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Share' }));
+    const dialog = await screen.findByRole('dialog');
+    const input = within(dialog).getByLabelText('Shared by');
+    await userEvent.clear(input);
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Create link' }));
+    expect(await within(dialog).findByText('Enter a name of 1–60 characters.')).toBeInTheDocument();
+    expect(calls.some((c) => c.method === 'POST')).toBe(false);
+    await userEvent.type(input, 'Dad');
+    await userEvent.click(within(dialog).getByLabelText(/include birth-based signs/i));
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Create link' }));
+    await waitFor(() => expect(calls.find((c) => c.method === 'POST')!.body).toEqual({ sharedByName: 'Dad', includeBirthSigns: true }));
+  });
+
+  it('removes the just-created link row when it is revoked', async () => {
+    let shares: ShareDto[] = [];
+    installMockApi({
+      'GET /me': ok(me()),
+      [`GET /fortunes/${FID}/shares`]: () => ok(shares),
+      [`POST /fortunes/${FID}/shares`]: () => { shares = [share()]; return ok(shares[0], 201); },
+      [`DELETE /shares/${share().id}`]: () => { shares = []; return { status: 200, body: {} }; },
+    });
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    renderApp(<ShareButton fortuneId={FID} />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Share' }));
+    const dialog = await screen.findByRole('dialog');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Create link' }));
+    await within(dialog).findByRole('button', { name: 'Stop sharing' });
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Stop sharing' }));
+    await waitFor(() => expect(within(dialog).queryAllByLabelText('Share link')).toHaveLength(0));
+  });
+
+  it('shows an error and keeps the link when revoking fails', async () => {
+    installMockApi({
+      'GET /me': ok(me()),
+      [`GET /fortunes/${FID}/shares`]: ok([share({ sharedByName: 'Dad' })]),
+      [`DELETE /shares/${share().id}`]: { status: 500, body: { error: { code: 'boom', message: 'x' } } },
+    });
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    renderApp(<ShareButton fortuneId={FID} />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Share' }));
+    const dialog = await screen.findByRole('dialog');
+    await userEvent.click(await within(dialog).findByRole('button', { name: 'Stop sharing' }));
+    expect(await within(dialog).findByText('Could not stop sharing. Please try again.')).toBeInTheDocument();
+    expect(within(dialog).getByText(/Dad · without signs/)).toBeInTheDocument();
+  });
 });

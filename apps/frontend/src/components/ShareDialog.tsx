@@ -1,9 +1,14 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { shareCreateSchema, type ShareDto } from '@third-eye/shared';
 import { apiErrorCode, useCreateShareMutation, useGetMeQuery, useGetSharesQuery, useRevokeShareMutation } from '../api';
 
 function LinkRow({ url }: { url: string }) {
   const [copied, setCopied] = useState(false);
+  useEffect(() => {
+    if (!copied) return;
+    const t = setTimeout(() => setCopied(false), 2000);
+    return () => clearTimeout(t);
+  }, [copied]);
   const canShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -31,6 +36,9 @@ function ShareDialog({ fortuneId, onClose }: { fortuneId: string; onClose: () =>
   const [includeBirthSigns, setIncludeBirthSigns] = useState(false);
   const [created, setCreated] = useState<ShareDto | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [revokeError, setRevokeError] = useState<string | null>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
+  useEffect(() => { nameRef.current?.focus(); }, []);
 
   async function create() {
     setError(null);
@@ -43,17 +51,27 @@ function ShareDialog({ fortuneId, onClose }: { fortuneId: string; onClose: () =>
     }
   }
 
+  async function revoke(id: string) {
+    setRevokeError(null);
+    try {
+      await revokeShare({ id, fortuneId }).unwrap();
+    } catch {
+      setRevokeError('Could not stop sharing. Please try again.');
+    }
+  }
+
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-night/80 p-4 sm:items-center" onClick={onClose}>
-      <div role="dialog" aria-modal="true" aria-labelledby="share-title" className="card grid w-full max-w-md gap-4" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-night/80 p-4 sm:items-center"
+      onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}>
+      <div role="dialog" aria-modal="true" aria-labelledby="share-title" className="card grid w-full max-w-md gap-4">
         <h2 id="share-title" className="text-2xl">Share this fortune</h2>
         <div>
           <label className="label" htmlFor="share-name">Shared by</label>
-          <input id="share-name" className="input" value={name} maxLength={60} onChange={(e) => setName(e.target.value)} />
+          <input id="share-name" ref={nameRef} className="input" value={name} maxLength={60} onChange={(e) => setName(e.target.value)} />
         </div>
         <label className="flex items-start gap-3 text-sm">
           <input type="checkbox" className="mt-1" checked={includeBirthSigns} onChange={(e) => setIncludeBirthSigns(e.target.checked)}
-            aria-describedby="share-signs-hint" aria-label="Include birth-based signs" />
+            aria-describedby="share-signs-hint" />
           <span>
             Include birth-based signs
             <span id="share-signs-hint" className="block text-mist/60">
@@ -63,10 +81,11 @@ function ShareDialog({ fortuneId, onClose }: { fortuneId: string; onClose: () =>
         </label>
         {error && <p className="field-error" role="alert">{error}</p>}
         <button type="button" className="btn-gold" disabled={creating} onClick={() => void create()}>Create link</button>
-        {created && <LinkRow url={created.url} />}
+        {created && shares.some((s) => s.id === created.id) && <LinkRow url={created.url} />}
         {shares.length > 0 && (
           <section className="grid gap-3">
             <h3 className="text-lg">Active links</h3>
+            {revokeError && <p className="field-error" role="alert">{revokeError}</p>}
             {shares.map((s) => (
               <div key={s.id} className="grid gap-2 rounded-xl border border-gold/15 p-3">
                 <p className="text-sm text-mist/80">
@@ -75,7 +94,7 @@ function ShareDialog({ fortuneId, onClose }: { fortuneId: string; onClose: () =>
                 <LinkRow url={s.url} />
                 <button type="button" className="btn-ghost justify-self-start text-sm" onClick={() => {
                   if (window.confirm('Stop sharing this link? Anyone who has it will no longer be able to open it.')) {
-                    void revokeShare({ id: s.id, fortuneId });
+                    void revoke(s.id);
                   }
                 }}>Stop sharing</button>
               </div>
@@ -90,10 +109,12 @@ function ShareDialog({ fortuneId, onClose }: { fortuneId: string; onClose: () =>
 
 export function ShareButton({ fortuneId }: { fortuneId: string }) {
   const [open, setOpen] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const close = () => { setOpen(false); buttonRef.current?.focus(); };
   return (
     <>
-      <button type="button" className="btn-ghost mx-auto" onClick={() => setOpen(true)}>Share</button>
-      {open && <ShareDialog fortuneId={fortuneId} onClose={() => setOpen(false)} />}
+      <button type="button" ref={buttonRef} className="btn-ghost mx-auto" onClick={() => setOpen(true)}>Share</button>
+      {open && <ShareDialog fortuneId={fortuneId} onClose={close} />}
     </>
   );
 }
