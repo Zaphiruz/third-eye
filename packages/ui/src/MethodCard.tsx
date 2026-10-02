@@ -1,8 +1,10 @@
-import { describeResult, getRune, getZodiacSign, type IChingData, type MethodResult, type RuneData, type TarotData, type WesternData } from '@third-eye/divination';
+import { describeResult, getRune, getZodiacSign, type IChingData, type MethodResult, type RuneData, type SkyData, type TarotData, type WesternData } from '@third-eye/divination';
 import type { FortuneResultDto } from '@third-eye/shared';
 import { TarotCard } from './symbols/TarotCard.js';
 import { RuneStone } from './symbols/RuneStone.js';
 import { Hexagram } from './symbols/Hexagram.js';
+import { MoonGlyph } from './symbols/MoonGlyph.js';
+import { SkyChart } from './symbols/SkyChart.js';
 import { SignRing, signItems } from './symbols/SignRing.js';
 
 function MethodSymbol({ result }: { result: FortuneResultDto }) {
@@ -17,6 +19,8 @@ function MethodSymbol({ result }: { result: FortuneResultDto }) {
       const d = result.data as IChingData;
       return <div className="flex items-center gap-3"><Hexagram lines={d.lines} className="w-16" />{d.relating !== null && <><span className="text-gold/60">→</span><Hexagram number={d.relating} className="w-12" /></>}</div>;
     }
+    case 'SKY':
+      return <SkyChart data={result.data as SkyData} />;
     default:
       return <SignRing items={signItems([result])} />;
   }
@@ -39,10 +43,17 @@ export function MethodCard({ result }: { result: FortuneResultDto }) {
 /** Compact glyph row for history rows. */
 export function MiniSymbols({ results }: { results: FortuneResultDto[] }) {
   const glyphs: string[] = [];
+  let sky: SkyData | null = null;
   for (const r of results) {
     if (r.method === 'RUNE') glyphs.push(getRune((r.data as RuneData).id).glyph);
     if (r.method === 'ICHING') glyphs.push(String.fromCodePoint(0x4dc0 + (r.data as IChingData).primary - 1));
+    if (r.method === 'SKY') sky = r.data as SkyData;
     if (r.method === 'WESTERN') glyphs.push(getZodiacSign((r.data as WesternData).sign).glyph);
   }
-  return <span aria-hidden className="font-display text-xl tracking-widest text-gold/80">{glyphs.join(' ')}</span>;
+  return (
+    <span aria-hidden className="inline-flex items-center gap-2 font-display text-xl tracking-widest text-gold/80">
+      {glyphs.join(' ')}
+      {sky && <MoonGlyph illumination={sky.moon.illumination} waxing={sky.moon.waxing} size={20} />}
+    </span>
+  );
 }

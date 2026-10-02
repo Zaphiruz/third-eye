@@ -14,6 +14,12 @@ const fortune: FortuneDto = {
     ] }, reading: 'Let go.' },
     { method: 'RUNE', data: { id: 'ansuz', reversed: false }, reading: 'Listen.' },
     { method: 'ICHING', data: { lines: [9, 8, 7, 6, 7, 8], primary: 63, changingLines: [1, 4], relating: 17 }, reading: 'Finish well.' },
+    { method: 'SKY', data: { moon: { phase: 'full', illumination: 1, waxing: false }, bodies: [
+      { body: 'sun', sign: 'libra', degree: 3, retrograde: false }, { body: 'moon', sign: 'aries', degree: 3, retrograde: false },
+      { body: 'mercury', sign: 'libra', degree: 24, retrograde: false }, { body: 'venus', sign: 'scorpio', degree: 7, retrograde: false },
+      { body: 'mars', sign: 'cancer', degree: 29, retrograde: false }, { body: 'jupiter', sign: 'leo', degree: 18, retrograde: false },
+      { body: 'saturn', sign: 'aries', degree: 11, retrograde: true },
+    ] }, reading: 'Bright.' },
     { method: 'WESTERN', data: { sign: 'gemini' }, reading: 'Curious.' },
   ],
 };
@@ -24,6 +30,7 @@ describe('server rendering', () => {
     expect(html).toContain('A gentle day.');
     expect(html).toContain('The Tower (reversed)');
     expect(html).toContain('Ansuz');
+    expect(html).toContain('Moon: full moon, 100% lit');
     expect(html).toContain('<svg');
     expect(html).not.toContain('<script');
   });
