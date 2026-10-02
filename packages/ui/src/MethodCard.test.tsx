@@ -10,9 +10,9 @@ describe('MethodCard explainer', () => {
     expect(summary.getAttribute('aria-label')).toBe('About I Ching');
     expect(summary.textContent).toBe('ⓘ');
     expect(screen.getByText(METHOD_INFO.ICHING.summary)).toBeInTheDocument();
-    const how = screen.getByRole('link', { name: 'How Third Eye does this', hidden: true });
+    const how = screen.getByRole('link', { name: 'How Third Eye does I Ching', hidden: true });
     expect(how.getAttribute('href')).toBe('/how-it-works#iching');
-    const more = screen.getByRole('link', { name: /Learn more/, hidden: true });
+    const more = screen.getByRole('link', { name: /Learn more about I Ching on Wikipedia/, hidden: true });
     expect(more.getAttribute('href')).toBe(METHOD_INFO.ICHING.learnMoreUrl);
     expect(more.getAttribute('target')).toBe('_blank');
     expect(more.getAttribute('rel')).toBe('noopener noreferrer');

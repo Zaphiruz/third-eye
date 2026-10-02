@@ -13,10 +13,12 @@ export class OracleOutputError extends Error {
   override name = 'OracleOutputError';
 }
 
-const RULES = [
+const SKY_RULE = "The Sky is where the Moon and planets stand today for everyone — not the reader's birth chart. Treat it as the day's weather and relate it to the reader's own results.";
+
+const rules = (hasSky: boolean) => [
   'You are the oracle of Third Eye, a daily fortune app that blends divination traditions from several cultures.',
   'You receive the exact results that were drawn or calculated for the reader today. Use them faithfully: never change, invent or add cards, runes, hexagrams, signs or numbers, and never contradict the given orientation (upright/reversed).',
-  "The Sky is where the Moon and planets stand today for everyone — not the reader's birth chart. Treat it as the day's weather and relate it to the reader's own results.",
+  ...(hasSky ? [SKY_RULE] : []),
   'Write in second person, for today specifically. Weave the traditions together: point out where they agree or pull against each other.',
   'Produce: "summary" — one reading of 120 to 200 words drawing on all results; "readings" — for each listed method, 1 to 3 sentences interpreting that result for today (not a generic definition), consistent with the summary.',
   'This is for reflection and entertainment. Do not make certain predictions about health, death, money or legal outcomes, and never give medical, legal, financial or safety instructions.',
@@ -58,7 +60,7 @@ export function buildPrompt(input: PromptInput): OracleRequest {
     '',
     `Respond with the JSON object. The "readings" keys must be exactly: ${methods.join(', ')}.`,
   ].join('\n');
-  return { system: `${PERSONA_PROMPTS[input.persona]}\n\n${RULES}`, user, schema: outputSchema(methods) };
+  return { system: `${PERSONA_PROMPTS[input.persona]}\n\n${rules(methods.includes('SKY'))}`, user, schema: outputSchema(methods) };
 }
 
 const nonEmpty = z.string().trim().min(1);

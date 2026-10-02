@@ -16,7 +16,7 @@ export function MoonGlyph({ illumination, waxing, size = 64, label, className = 
     <svg viewBox="0 0 100 100" width={size} height={size} data-lit={waxing ? 'right' : 'left'} className={className} {...a11y}>
       <circle cx={c} cy={c} r={r} fill="#1e1b4b" stroke="#d4af37" strokeOpacity="0.4" strokeWidth="1.5" />
       <path d={lit} fill="#e9d8a6" transform={waxing ? undefined : `translate(${2 * c} 0) scale(-1 1)`}
-        filter="drop-shadow(0 0 4px rgba(233,216,166,0.45))" />
+        style={{ filter: 'drop-shadow(0 0 4px rgba(233,216,166,0.45))' }} />
     </svg>
   );
 }

@@ -19,8 +19,9 @@ function MethodHelp({ method, label }: { method: Method; label: string }) {
       <div className="mt-2 grid gap-2 rounded-lg bg-veil/40 p-3 text-sm text-mist/80">
         <p>{info.summary}</p>
         <p className="flex flex-wrap gap-x-4 gap-y-1">
-          <a className={linkClass} href={`/how-it-works#${method.toLowerCase()}`}>How Third Eye does this</a>
+          <a className={linkClass} href={`/how-it-works#${method.toLowerCase()}`} aria-label={`How Third Eye does ${label}`}>How Third Eye does this</a>
           <a className={linkClass} href={info.learnMoreUrl} target="_blank" rel="noopener noreferrer"
+            aria-label={`Learn more about ${label} on Wikipedia (opens in a new tab)`}
             title={`${info.learnMoreLabel} on Wikipedia`}>Learn more ↗</a>
         </p>
       </div>

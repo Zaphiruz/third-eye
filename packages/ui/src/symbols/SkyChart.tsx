@@ -9,13 +9,13 @@ export function SkyChart({ data, revealed, className = '' }: { data: SkyData; re
     <div className={`grid w-full max-w-xs justify-items-center gap-3 ${className}`}>
       <MoonGlyph illumination={data.moon.illumination} waxing={data.moon.waxing} size={88}
         label={`Moon: ${phase.toLowerCase()}, ${pct}% lit`} />
-      <p className="text-sm text-mist/80">{phase} · {pct}% lit</p>
+      <p aria-hidden className="text-sm text-mist/80">{phase} · {pct}% lit</p>
       <ul className="grid w-full gap-1 text-sm">
         {data.bodies.map((b, i) => {
           const body = SKY_BODIES[b.body];
           const sign = getZodiacSign(b.sign);
           return (
-            <li key={b.body} data-body={b.body}
+            <li key={b.body} data-body={b.body} aria-hidden={i >= shown || undefined}
               className={`flex items-center gap-2 transition-opacity duration-500 ${i < shown ? 'opacity-100' : 'opacity-0'}`}>
               <span aria-hidden className="w-6 text-center font-display text-lg text-gold">{body.glyph}</span>
               <span className="flex-1">{body.name}</span>

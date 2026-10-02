@@ -152,6 +152,8 @@ docker exec shared-infra-postgresql-1 psql -U postgres -d third_eye -c \
 ```
 To revoke one by hand: `UPDATE shares SET revoked_at = now() WHERE token = '<token>';`
 
+**Rollback warning (The Sky):** after the Sky release, `fortune_results` holds `SKY` rows, and an older backend image's Prisma client cannot decode that enum value. Do not roll back past this release without first running `DELETE FROM fortune_results WHERE method = 'SKY';` — this removes The Sky from those fortunes.
+
 **How readings work:** `/how-it-works` is a public, static page rendered by the backend (Caddy routes it there), cached for an hour, `noindex`. Its text lives in `apps/backend/src/help/content.tsx` and `packages/divination/src/data/method-info.ts`.
 
 **Logs:** `docker compose -f docker-compose.prod.yml logs -f backend` (look for `oracle attempt failed`).

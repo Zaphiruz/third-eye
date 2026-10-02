@@ -30,16 +30,16 @@ export const METHOD_GUIDES: Record<Method, ReactNode> = {
   </>,
   CHINESE: <>
     <p>The Chinese zodiac goes back more than 2,000 years. Twelve animals (Rat, Ox, Tiger…) cycle with the five elements (wood, fire, earth, metal, water), each in a yang and a yin year, giving a 60-year cycle.</p>
-    <p><strong>How Third Eye calculates it:</strong> the zodiac year starts at Lunar New Year (between January 21 and February 20), not on January 1. Third Eye looks up the exact Lunar New Year date for your birth year in a table covering 1900–2100. If you were born in January or early February, you may belong to the previous year's animal.</p>
+    <p><strong>How Third Eye calculates it:</strong> the zodiac year starts at Lunar New Year (between January 21 and February 20), not on January 1. Third Eye looks up the exact Lunar New Year date for your birth year in a table covering 1900–2100. If you were born in January or February, you may belong to the previous year's animal.</p>
     <p><strong>Reading it:</strong> the animal is your character; the element colours how it shows; yin and yang say whether it turns inward or outward.</p>
   </>,
   NUMEROLOGY: <>
     <p>The idea that numbers carry meaning is ancient and is often credited to Pythagoras. Modern "Pythagorean" numerology took shape in the early 20th century.</p>
-    <p><strong>How Third Eye calculates it:</strong> for your <em>Life Path</em>, your birth month, day and year are each reduced to one digit by adding their digits, then added together and reduced again. For your <em>Expression</em> number (only if you gave a full name), letters count A=1 … I=9, J=1 … R=9, S=1 … Z=8, and the total is reduced the same way. 11, 22 and 33 are <em>master numbers</em> and are never reduced.</p>
+    <p><strong>How Third Eye calculates it:</strong> for your <em>Life Path</em>, your birth month, day and year are each reduced by adding their digits (stopping at a master number), then added together and reduced again. For your <em>Expression</em> number (only if you gave a full name), letters count A=1 … I=9, J=1 … R=9, S=1 … Z=8, and the total is reduced the same way. 11, 22 and 33 are <em>master numbers</em> and are never reduced further.</p>
     <p><strong>Reading it:</strong> your Life Path is the road you walk; your Expression is the toolkit you bring to it. Master numbers carry extra intensity.</p>
   </>,
   BLOODTYPE: <>
-    <p>Blood type personality (ketsueki-gata) began with a 1927 paper by the Japanese psychologist Takeji Furukawa. It became a pop-culture favourite in Japan and Korea in the 1970s. Studies have found no real link between blood type and personality — it is here for fun and cultural flavour.</p>
+    <p>Blood type personality (ketsueki-gata) began with a 1927 paper by the Japanese psychologist Takeji Furukawa. It became a pop-culture favourite in Japan in the 1970s, and later in South Korea. Studies have found no real link between blood type and personality — it is here for fun and cultural flavour.</p>
     <p><strong>How Third Eye uses it:</strong> only if you add your blood type in Settings. Each type has a classic archetype — A the Careful Planner, B the Free Spirit, O the Confident Leader, AB the Enigmatic Dreamer.</p>
     <p><strong>Reading it:</strong> treat it as a lighthearted lens on how you might meet the day.</p>
   </>,

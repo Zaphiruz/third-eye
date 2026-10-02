@@ -15,6 +15,11 @@ describe('buildPrompt', () => {
   });
   const req = buildPrompt({ persona: 'TRICKSTER', date: '2026-09-26', firstName: 'Ada', results });
 
+  it('omits the Sky rule when there is no SKY result', () => {
+    const noSky = buildPrompt({ persona: 'TRICKSTER', date: '2026-09-26', firstName: 'Ada', results: results.filter((r) => r.method !== 'SKY') });
+    expect(noSky.system).not.toContain('The Sky is where the Moon and planets stand today');
+  });
+
   it('uses the persona voice in the system prompt', () => {
     expect(req.system).toContain(PERSONA_PROMPTS.TRICKSTER);
     expect(req.system).toMatch(/never (change|invent)/i);
