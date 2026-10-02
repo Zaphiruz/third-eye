@@ -1,8 +1,9 @@
 import { Prisma, type PrismaClient } from '@prisma/client';
-import { castAll, type Rng } from '@third-eye/divination';
+import type { Rng } from '@third-eye/divination';
+import { castAll } from '@third-eye/divination/cast';
 import { HISTORY_PAGE_SIZE, isoDateSchema, type FortuneDto, type FortunePageDto, type TodayDto } from '@third-eye/shared';
 import { AppError, notFound, parse } from '../errors.js';
-import { fromDbDate, localDate, toDbDate } from '../lib/dates.js';
+import { fromDbDate, localDate, localNoonUtc, toDbDate } from '../lib/dates.js';
 import type { Oracle } from '../oracle/interpret.js';
 import { serializeFortune, serializeSummary } from './serialize.js';
 
@@ -57,7 +58,7 @@ export function createFortuneService(deps: FortuneServiceDeps): FortuneService {
       if (existing) return { fortune: await resume(existing.id), fresh: false };
 
       const profile = { birthDate: fromDbDate(user.birthDate), fullName: user.fullName, bloodType: user.bloodType };
-      const results = castAll(profile, deps.rng);
+      const results = castAll(profile, deps.rng, { skyAt: localNoonUtc(date, user.timeZone) });
       try {
         const f = await prisma.fortune.create({
           data: {

@@ -56,6 +56,9 @@ importers:
       '@third-eye/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      astronomy-engine:
+        specifier: ^2.1.19
+        version: 2.1.19
       fastify:
         specifier: ^5.1.0
         version: 5.12.5

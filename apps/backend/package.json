@@ -25,6 +25,7 @@
     "@third-eye/divination": "workspace:*",
     "@third-eye/shared": "workspace:*",
     "@third-eye/ui": "workspace:*",
+    "astronomy-engine": "^2.1.19",
     "fastify": "^5.1.0",
     "openid-client": "^5.7.0",
     "react": "^18.3.1",

@@ -31,6 +31,7 @@ enum Method {
   TAROT
   RUNE
   ICHING
+  SKY
   WESTERN
   CHINESE
   NUMEROLOGY

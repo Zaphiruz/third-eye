@@ -45,6 +45,7 @@ describe('public share page', () => {
     const hidden = await page(first.token);
     expect(hidden.body).not.toContain('Sun Sign');
     expect(hidden.body).not.toContain('Blood Type');
+    expect(hidden.body).toContain('The Sky');
     expect(hidden.body).not.toContain(first.f.id);
     await resetDatabase();
     const shown = await page((await share({ includeBirthSigns: true })).token);

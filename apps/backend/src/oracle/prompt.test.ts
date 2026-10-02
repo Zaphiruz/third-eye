@@ -1,12 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import { castAll, seededRng } from '@third-eye/divination';
+import { seededRng } from '@third-eye/divination';
+import { castAll } from '@third-eye/divination/cast';
 import { buildPrompt, outputSchema, parseOracleOutput, OracleOutputError } from './prompt.js';
 import { PERSONA_PROMPTS } from './personas.js';
 
-const results = castAll({ birthDate: '1990-06-15', fullName: 'Ada Byron Lovelace', bloodType: null }, seededRng(1));
+const results = castAll({ birthDate: '1990-06-15', fullName: 'Ada Byron Lovelace', bloodType: null }, seededRng(1), { skyAt: new Date('2026-09-26T12:00:00Z') });
 const methods = results.map((r) => r.method);
 
 describe('buildPrompt', () => {
+  it("includes today's sky", () => {
+    expect(req.user).toContain('[SKY] The Sky');
+    expect(req.user).toMatch(/- Moon: [a-z ]+, \d+% lit, in [A-Z][a-z]+ \d+°/);
+    expect(req.system).toContain('The Sky is where the Moon and planets stand today');
+  });
   const req = buildPrompt({ persona: 'TRICKSTER', date: '2026-09-26', firstName: 'Ada', results });
 
   it('uses the persona voice in the system prompt', () => {

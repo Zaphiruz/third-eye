@@ -5,11 +5,11 @@ export type BloodType = 'A' | 'B' | 'AB' | 'O';
 export const BLOOD_TYPE_IDS = ['A', 'B', 'AB', 'O'] as const satisfies readonly BloodType[];
 
 /** Display and ritual order. castAll returns results in this order. */
-export const METHODS = ['TAROT', 'RUNE', 'ICHING', 'WESTERN', 'CHINESE', 'NUMEROLOGY', 'BLOODTYPE'] as const;
+export const METHODS = ['TAROT', 'RUNE', 'ICHING', 'SKY', 'WESTERN', 'CHINESE', 'NUMEROLOGY', 'BLOODTYPE'] as const;
 export type Method = (typeof METHODS)[number];
 
 export const METHOD_LABELS: Record<Method, string> = {
-  TAROT: 'Tarot', RUNE: 'Rune', ICHING: 'I Ching', WESTERN: 'Sun Sign',
+  TAROT: 'Tarot', RUNE: 'Rune', ICHING: 'I Ching', SKY: 'The Sky', WESTERN: 'Sun Sign',
   CHINESE: 'Chinese Zodiac', NUMEROLOGY: 'Numerology', BLOODTYPE: 'Blood Type',
 };
 
@@ -47,6 +47,7 @@ export type MethodResult =
   | { method: 'TAROT'; data: TarotData }
   | { method: 'RUNE'; data: RuneData }
   | { method: 'ICHING'; data: IChingData }
+  | { method: 'SKY'; data: SkyData }
   | { method: 'WESTERN'; data: WesternData }
   | { method: 'CHINESE'; data: ChineseData }
   | { method: 'NUMEROLOGY'; data: NumerologyData }

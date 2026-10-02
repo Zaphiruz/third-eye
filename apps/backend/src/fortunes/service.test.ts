@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { castAll, seededRng } from '@third-eye/divination';
+import { seededRng } from '@third-eye/divination';
+import { castAll, castSky } from '@third-eye/divination/cast';
 import { getTestPrisma, resetDatabase, seedFortune } from '../test/helpers/db.js';
 import { FakeOracleClient, silentLog } from '../test/helpers/fakes.js';
 import { createOracle } from '../oracle/interpret.js';
@@ -45,9 +46,9 @@ describe('today', () => {
     expect(first.fresh).toBe(true);
     expect(first.fortune.status).toBe('PENDING');
     expect(first.fortune.date).toBe('2026-09-26');
-    expect(first.fortune.results.map((r) => r.method)).toEqual(['TAROT', 'RUNE', 'ICHING', 'WESTERN', 'CHINESE', 'NUMEROLOGY', 'BLOODTYPE']);
+    expect(first.fortune.results.map((r) => r.method)).toEqual(['TAROT', 'RUNE', 'ICHING', 'SKY', 'WESTERN', 'CHINESE', 'NUMEROLOGY', 'BLOODTYPE']);
     expect(first.fortune.results.every((r) => r.reading === null)).toBe(true);
-    const expected = castAll({ birthDate: '1990-06-15', fullName: null, bloodType: 'A' }, seededRng(11));
+    const expected = castAll({ birthDate: '1990-06-15', fullName: null, bloodType: 'A' }, seededRng(11), { skyAt: new Date('2026-09-26T12:00:00Z') });
     expect(first.fortune.results.map((r) => r.data)).toEqual(expected.map((r) => r.data));
 
     await settle();
@@ -76,6 +77,14 @@ describe('today', () => {
     await makeUser('west', { timeZone: 'America/Los_Angeles' });
     expect((await service().today('east')).fortune.date).toBe('2026-09-27');
     expect((await service().today('west')).fortune.date).toBe('2026-09-26');
+  });
+
+  it("casts the sky for noon on the fortune's date in the user's time zone", async () => {
+    now = new Date('2026-09-26T20:00:00Z');                  // 13:00 PDT on 2026-09-26
+    await makeUser('la', { timeZone: 'America/Los_Angeles' });
+    const { fortune } = await service().today('la');
+    expect(fortune.date).toBe('2026-09-26');
+    expect(fortune.results.find((r) => r.method === 'SKY')!.data).toEqual(castSky(new Date('2026-09-26T19:00:00Z')));
   });
 
   it('switching time zones never yields an extra fortune on the same real day', async () => {

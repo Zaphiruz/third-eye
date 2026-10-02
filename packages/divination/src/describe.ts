@@ -7,6 +7,7 @@ import { getZodiacSign } from './data/zodiac.js';
 import { getChineseAnimal, getChineseElement } from './data/chinese.js';
 import { getNumberMeaning } from './data/numbers.js';
 import { BLOOD_TYPES } from './data/blood-types.js';
+import { MOON_PHASE_NAMES, SKY_BODIES } from './data/sky.js';
 
 const list = (xs: string[]) => xs.join(', ');
 const cap = (s: string) => s[0]!.toUpperCase() + s.slice(1);
@@ -39,6 +40,18 @@ export function describeResult(r: MethodResult): ResultDescription {
       if (r.data.changingLines.length) facts.push(`Changing lines: ${r.data.changingLines.join(', ')}`);
       if (r.data.relating !== null) facts.push(hex('Relating', r.data.relating));
       return { method: r.method, title, facts };
+    }
+    case 'SKY': {
+      const { moon, bodies } = r.data;
+      const at = (b: (typeof bodies)[number]) => `${getZodiacSign(b.sign).name} ${b.degree}°`;
+      const moonPos = bodies.find((b) => b.body === 'moon')!;
+      const retro = bodies.filter((b) => b.retrograde).map((b) => SKY_BODIES[b.body].name);
+      return { method: r.method, title, facts: [
+        `Moon: ${MOON_PHASE_NAMES[moon.phase].toLowerCase()}, ${Math.round(moon.illumination * 100)}% lit, in ${at(moonPos)}`,
+        ...bodies.filter((b) => b.body !== 'moon')
+          .map((b) => `${SKY_BODIES[b.body].name} in ${at(b)}${b.retrograde ? ' (retrograde)' : ''}`),
+        retro.length ? `Retrograde today: ${list(retro)}` : 'No planets retrograde today',
+      ] };
     }
     case 'WESTERN': {
       const s = getZodiacSign(r.data.sign);

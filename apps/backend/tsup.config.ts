@@ -4,7 +4,7 @@ export default defineConfig({
   format: ['esm'],
   platform: 'node',
   target: 'node20',
-  noExternal: ['@third-eye/shared', '@third-eye/divination', '@third-eye/ui'],
+  noExternal: [/^@third-eye\//, 'astronomy-engine'],
   esbuildOptions(o) { o.jsx = 'automatic'; },
   sourcemap: true,
   clean: true,
