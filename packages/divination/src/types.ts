@@ -34,6 +34,15 @@ export interface ChineseData { animal: ChineseAnimalId; element: ChineseElementI
 export interface NumerologyData { lifePath: number; expression: number | null }
 export interface BloodTypeData { type: BloodType }
 
+export type SkyBody = 'sun' | 'moon' | 'mercury' | 'venus' | 'mars' | 'jupiter' | 'saturn';
+export type MoonPhase =
+  | 'new' | 'waxing-crescent' | 'first-quarter' | 'waxing-gibbous'
+  | 'full' | 'waning-gibbous' | 'last-quarter' | 'waning-crescent';
+/** Tropical zodiac position; degree is 0–29 within the sign. Sun and Moon are never retrograde. */
+export interface SkyBodyPosition { body: SkyBody; sign: ZodiacSignId; degree: number; retrograde: boolean }
+/** illumination is a 0–1 fraction (2 decimals); bodies are in SKY_BODY_IDS order. */
+export interface SkyData { moon: { phase: MoonPhase; illumination: number; waxing: boolean }; bodies: SkyBodyPosition[] }
+
 export type MethodResult =
   | { method: 'TAROT'; data: TarotData }
   | { method: 'RUNE'; data: RuneData }
