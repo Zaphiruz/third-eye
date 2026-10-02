@@ -30,7 +30,7 @@ export function shareDescription(fortune: FortuneDto): string {
   return parts.join(' · ');
 }
 
-function Page({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
+export function Page({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
   return (
     <html lang="en">
       <head>
@@ -58,7 +58,7 @@ function Page({ title, description, children }: { title: string; description?: s
   );
 }
 
-const doc = (el: ReactElement) => `<!doctype html>${renderToStaticMarkup(el)}`;
+export const doc = (el: ReactElement) => `<!doctype html>${renderToStaticMarkup(el)}`;
 
 export function renderSharePage(share: PublicShare): string {
   const { fortune, sharedByName } = share;

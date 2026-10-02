@@ -18,6 +18,7 @@ import { registerFortuneRoutes } from './fortunes/routes.js';
 import { createShareService } from './shares/service.js';
 import { registerShareRoutes } from './shares/routes.js';
 import { registerPublicShareRoutes } from './shares/public-routes.js';
+import { registerHelpRoutes } from './help/routes.js';
 
 export interface BuildAppOptions {
   logger?: FastifyServerOptions['logger'];
@@ -124,6 +125,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   const shares = createShareService({ prisma: options.prisma, frontendOrigin: options.frontendOrigin });
   registerShareRoutes(app, { shares });
   registerPublicShareRoutes(app, { shares });
+  registerHelpRoutes(app);
 
   return app;
 }
