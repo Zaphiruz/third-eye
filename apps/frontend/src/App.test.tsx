@@ -8,6 +8,7 @@ describe('App gate', () => {
     installMockApi({ 'GET /me': ok(me({ onboarded: false, profile: { ...me().profile, birthDate: null } })) });
     renderApp();
     expect(await screen.findByRole('heading', { name: 'Welcome' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'How readings work' })).toHaveAttribute('href', '/how-it-works');
   });
 
   it('shows the app shell with navigation for onboarded users', async () => {

@@ -1,10 +1,12 @@
 # Third Eye
 
-A daily fortune, woven from many traditions. Each day Third Eye draws a three-card tarot spread, casts an Elder Futhark rune and an I Ching hexagram, reads your Western sun sign, Chinese zodiac, numerology and (optionally) blood type — then an AI oracle in the persona you choose interprets them together.
+A daily fortune, woven from many traditions. Each day Third Eye draws a three-card tarot spread, casts an Elder Futhark rune and an I Ching hexagram, reads today's sky (moon phase and planet positions), your Western sun sign, Chinese zodiac, numerology and (optionally) blood type — then an AI oracle in the persona you choose interprets them together.
 
 Live (family & friends, Authentik sign-in): https://third-eye.wispy-nook.casa. Readings are written by Claude Haiku 4.5 by default; see `OPERATIONS.md` to change the model.
 
 Any finished reading can be shared with people who don't have an account: **Share** creates a read-only link (optionally without your birth-based signs) that you can stop sharing at any time.
+
+Every method card has an ⓘ explainer, and `/how-it-works` (public) explains each tradition and how readings are made.
 
 - `packages/divination` — pure TypeScript: every draw and calculation, plus the reference data (78 cards, 24 runes, 64 hexagrams, zodiac, Lunar New Year 1900–2100).
 - `apps/backend` — Fastify + Prisma API, Authentik OIDC, the Claude-backed oracle.

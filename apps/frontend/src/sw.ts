@@ -4,6 +4,6 @@ import { NavigationRoute, registerRoute } from 'workbox-routing';
 
 declare let self: ServiceWorkerGlobalScope;
 precacheAndRoute(self.__WB_MANIFEST);
-registerRoute(new NavigationRoute(createHandlerBoundToURL('/index.html'), { denylist: [/^\/api\//, /^\/s\//] }));
+registerRoute(new NavigationRoute(createHandlerBoundToURL('/index.html'), { denylist: [/^\/api\//, /^\/s\//, /^\/how-it-works/] }));
 self.addEventListener('install', () => { void self.skipWaiting(); });
 self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));

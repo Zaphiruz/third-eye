@@ -17,6 +17,7 @@ export function Settings() {
         {saved && <p className="mt-3 text-center text-gold-soft" role="status">Saved</p>}
       </div>
       <p className="text-center text-sm text-mist/60">Changes apply from your next daily fortune. Past fortunes keep the details they were read with.</p>
+      <a className="text-center text-sm text-gold underline-offset-2 hover:underline" href="/how-it-works">How readings work</a>
       <button className="btn-ghost" onClick={async () => {
         const r = await logout().unwrap();
         globalThis.location.assign(r.endSessionUrl ?? '/');

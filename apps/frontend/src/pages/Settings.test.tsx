@@ -5,6 +5,12 @@ import { installMockApi, ok } from '../test/mockApi';
 import { me, renderApp } from '../test/render';
 
 describe('Settings', () => {
+  it('links to how readings work', async () => {
+    installMockApi({ 'GET /me': ok(me()) });
+    renderApp(undefined, { route: '/settings' });
+    expect(await screen.findByRole('link', { name: 'How readings work' })).toHaveAttribute('href', '/how-it-works');
+  });
+
   it('prefills the profile and saves changes', async () => {
     const calls = installMockApi({
       'GET /me': ok(me({ profile: { ...me().profile, bloodType: 'O' } })),

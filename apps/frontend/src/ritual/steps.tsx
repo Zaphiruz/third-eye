@@ -1,8 +1,8 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { motion } from 'motion/react';
-import type { IChingData, RuneData, TarotData } from '@third-eye/divination';
+import type { IChingData, RuneData, SkyData, TarotData } from '@third-eye/divination';
 import type { FortuneDto } from '@third-eye/shared';
-import { Hexagram, RuneStone, SignRing, TarotCard, signItems } from '@third-eye/ui';
+import { Hexagram, RuneStone, SignRing, SkyChart, TarotCard, signItems } from '@third-eye/ui';
 
 export interface RitualStep { key: string; caption: string; duration: number; render: () => ReactNode }
 
@@ -90,6 +90,16 @@ function OracleStep({ reduced }: { reduced: boolean }) {
   );
 }
 
+function SkyStep({ data, reduced }: { data: SkyData; reduced: boolean }) {
+  const shown = useTicker(data.bodies.length, reduced ? 60 : 320);
+  return (
+    <motion.div className="flex justify-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+      transition={{ duration: reduced ? 0.2 : 0.8 }}>
+      <SkyChart data={data} revealed={shown} />
+    </motion.div>
+  );
+}
+
 export function buildRitualSteps(fortune: FortuneDto, reduced: boolean): RitualStep[] {
   const d = (normal: number) => (reduced ? 800 : normal);
   const byMethod = Object.fromEntries(fortune.results.map((r) => [r.method, r.data]));
@@ -97,6 +107,7 @@ export function buildRitualSteps(fortune: FortuneDto, reduced: boolean): RitualS
   if (byMethod.TAROT) steps.push({ key: 'tarot', caption: 'The cards are drawn', duration: d(3400), render: () => <TarotStep data={byMethod.TAROT as TarotData} reduced={reduced} /> });
   if (byMethod.RUNE) steps.push({ key: 'rune', caption: 'A rune is cast', duration: d(2200), render: () => <RuneStep data={byMethod.RUNE as RuneData} reduced={reduced} /> });
   if (byMethod.ICHING) steps.push({ key: 'iching', caption: 'The coins fall six times', duration: d(3600), render: () => <IChingStep data={byMethod.ICHING as IChingData} reduced={reduced} /> });
+  if (byMethod.SKY) steps.push({ key: 'sky', caption: 'The heavens turn', duration: d(3200), render: () => <SkyStep data={byMethod.SKY as SkyData} reduced={reduced} /> });
   if (signItems(fortune.results).length) steps.push({ key: 'signs', caption: 'Your stars and numbers', duration: d(2800), render: () => <SignsStep fortune={fortune} reduced={reduced} /> });
   steps.push({ key: 'oracle', caption: '', duration: reduced ? 300 : 1200, render: () => <OracleStep reduced={reduced} /> });
   return steps;

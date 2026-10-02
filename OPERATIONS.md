@@ -152,6 +152,8 @@ docker exec shared-infra-postgresql-1 psql -U postgres -d third_eye -c \
 ```
 To revoke one by hand: `UPDATE shares SET revoked_at = now() WHERE token = '<token>';`
 
+**How readings work:** `/how-it-works` is a public, static page rendered by the backend (Caddy routes it there), cached for an hour, `noindex`. Its text lives in `apps/backend/src/help/content.tsx` and `packages/divination/src/data/method-info.ts`.
+
 **Logs:** `docker compose -f docker-compose.prod.yml logs -f backend` (look for `oracle attempt failed`).
 
 **A fortune stuck or failed:** a `FAILED` fortune, or one `PENDING` for more than two minutes, is retried with the

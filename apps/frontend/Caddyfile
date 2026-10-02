@@ -34,6 +34,11 @@
     reverse_proxy backend:3000
   }
 
+  # The public "How readings work" page is rendered by the backend, like share pages.
+  handle /how-it-works {
+    reverse_proxy backend:3000
+  }
+
   # Hashed build output is immutable.
   handle /assets/* {
     root * /srv
