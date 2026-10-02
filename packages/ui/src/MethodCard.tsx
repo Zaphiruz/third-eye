@@ -1,4 +1,4 @@
-import { describeResult, getRune, getZodiacSign, type IChingData, type MethodResult, type RuneData, type SkyData, type TarotData, type WesternData } from '@third-eye/divination';
+import { describeResult, getRune, getZodiacSign, METHOD_INFO, type IChingData, type Method, type MethodResult, type RuneData, type SkyData, type TarotData, type WesternData } from '@third-eye/divination';
 import type { FortuneResultDto } from '@third-eye/shared';
 import { TarotCard } from './symbols/TarotCard.js';
 import { RuneStone } from './symbols/RuneStone.js';
@@ -6,6 +6,27 @@ import { Hexagram } from './symbols/Hexagram.js';
 import { MoonGlyph } from './symbols/MoonGlyph.js';
 import { SkyChart } from './symbols/SkyChart.js';
 import { SignRing, signItems } from './symbols/SignRing.js';
+
+const linkClass = 'text-gold underline-offset-2 hover:underline';
+
+/** A plain <details> so it works on the JavaScript-free share pages too. */
+function MethodHelp({ method, label }: { method: Method; label: string }) {
+  const info = METHOD_INFO[method];
+  return (
+    <details>
+      <summary aria-label={`About ${label}`}
+        className="absolute right-0 top-0 flex h-8 w-8 cursor-pointer list-none items-center justify-center rounded-full border border-gold/40 text-gold/80 hover:text-gold [&::-webkit-details-marker]:hidden">ⓘ</summary>
+      <div className="mt-2 grid gap-2 rounded-lg bg-veil/40 p-3 text-sm text-mist/80">
+        <p>{info.summary}</p>
+        <p className="flex flex-wrap gap-x-4 gap-y-1">
+          <a className={linkClass} href={`/how-it-works#${method.toLowerCase()}`}>How Third Eye does this</a>
+          <a className={linkClass} href={info.learnMoreUrl} target="_blank" rel="noopener noreferrer"
+            title={`${info.learnMoreLabel} on Wikipedia`}>Learn more ↗</a>
+        </p>
+      </div>
+    </details>
+  );
+}
 
 function MethodSymbol({ result }: { result: FortuneResultDto }) {
   switch (result.method) {
@@ -30,7 +51,10 @@ export function MethodCard({ result }: { result: FortuneResultDto }) {
   const desc = describeResult({ method: result.method, data: result.data } as MethodResult);
   return (
     <section className="card grid gap-3">
-      <h3 className="text-2xl">{desc.title}</h3>
+      <header className="relative">
+        <h3 className="pr-10 text-2xl">{desc.title}</h3>
+        <MethodHelp method={result.method} label={desc.title} />
+      </header>
       <div className="flex justify-center"><MethodSymbol result={result} /></div>
       <ul className="grid gap-1 text-sm text-mist/60">{desc.facts.map((f) => <li key={f}>{f}</li>)}</ul>
       {result.reading
