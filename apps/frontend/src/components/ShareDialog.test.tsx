@@ -117,6 +117,7 @@ describe('ShareButton', () => {
     renderApp(<ShareButton fortuneId={FID} />);
     await userEvent.click(await screen.findByRole('button', { name: 'Share' }));
     const dialog = await screen.findByRole('dialog');
+    await waitFor(() => expect(within(dialog).getByLabelText('Shared by')).toHaveValue('Ada')); // /me must have loaded, or the name is empty
     await userEvent.click(within(dialog).getByRole('button', { name: 'Create link' }));
     await within(dialog).findByRole('button', { name: 'Stop sharing' });
     await userEvent.click(within(dialog).getByRole('button', { name: 'Stop sharing' }));
@@ -147,6 +148,7 @@ describe('ShareButton', () => {
     renderApp(<ShareButton fortuneId={FID} />);
     await userEvent.click(await screen.findByRole('button', { name: 'Share' }));
     const dialog = await screen.findByRole('dialog');
+    await waitFor(() => expect(within(dialog).getByLabelText('Shared by')).toHaveValue('Ada')); // /me must have loaded, or the name is empty
     await userEvent.click(within(dialog).getByRole('button', { name: 'Create link' }));
     expect(await within(dialog).findByDisplayValue('https://third-eye.example/s/AAAAAAAAAAAAAAAAAAAAAA')).toBeInTheDocument();
   });
