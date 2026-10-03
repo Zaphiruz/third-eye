@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "third-eye-backend",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@third-eye/backend", "dev"],
+      "port": 3001
+    },
+    {
+      "name": "third-eye-frontend",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@third-eye/frontend", "dev"],
+      "port": 5174
+    }
+  ]
+}
